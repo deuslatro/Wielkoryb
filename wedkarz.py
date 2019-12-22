@@ -298,6 +298,7 @@ def debuguj():
     label3 = Label(debug, fg="red", text="DEBUGER nie działa z włączonym MULTICLIENT")
     label3.pack()
     DEBUGGER = 0
+    debug.protocol('WM_DELETE_WINDOW', debug.withdraw)
     debug.withdraw()
     debug.mainloop()
 
@@ -562,7 +563,7 @@ def start2():
 
     koordyrobaka1 = szukajwoknie(oknostart1, okno1, robak)
     if (koordyrobaka1 == 0):
-        INFO1.set("nie ofnaleziono robaka")
+        INFO1.set("nie odnaleziono robaka")
         return 0
     koordylowienia1 = szukajwoknie(oknostart1, okno1, low)
     if (koordylowienia1 == 0):
@@ -716,8 +717,6 @@ def otwieranie(oknoeq1, oknoeq2, sprawdzanie):
             pyautogui.moveTo(oknoeq1[0] + 0, 5 + (oknoeq1[1] + (s * 32)), 1)
 
     if sprawdzanie % 6 == 3:
-
-
         ryba = szukajwoknie(oknoeq1, oknoeq2, ryba1)
         if (ryba != 0):
             pyautogui.moveTo(ryba[0], ryba[1], 0.25)
@@ -823,7 +822,6 @@ def usu():
     else:
         USUN = 0
 
-
 # MENU
 def menu():
     global INFO1
@@ -906,8 +904,11 @@ def menu():
     check1.pack(side=TOP)
     check4.pack(side=TOP)
     check2.pack(side=TOP)
+
+    root.protocol('WM_DELETE_WINDOW', root.quit)
     debuguj()
     root.mainloop()
+
 
 
 def checkboxy():
