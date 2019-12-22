@@ -987,5 +987,5 @@ def checkboxy():
     if MULTI == 0:
         return (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1)
 
-
+print("proba")
 main()
