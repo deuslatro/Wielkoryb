@@ -1,0 +1,5 @@
+0. Zamykanie Aplikacji X`em
+1. wspólna tablica na wszyskie obrazki ryb
+2. wywalenie funkcji sprawdzającej z maską(niepotrzebne na nodii)
+3. Sprawdzanie Rozdziałki (wypisywanie ją do okienka)
+4. Zrobienie multiclienta na 4 clinty
