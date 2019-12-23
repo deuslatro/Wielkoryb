@@ -1,5 +1,6 @@
 import time
 import random
+from math import fabs
 import pyautogui
 import PIL
 from tkinter import *
@@ -26,38 +27,19 @@ kosz = Image.open("img/kosz.png")
 usuwanie = Image.open("img/usun.png")
 puste = Image.open("img/puste.png")
 shiri = Image.open("img/shiri.png")
+liczbatest = Image.open("img/liczba1test.png")
+
+liczby = []
+for i in range(1,7):
+    liczbaStr=("img/liczba"+ str(i) +".png")
+    print(liczbaStr)
+    liczbaTmp = Image.open(liczbaStr)
+    liczby.append(liczbaTmp)
 
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
-# wczytaj liczby  : 0  niebieskie , 1 czerwone , 2 żółte, 3 białe
-liczba1 = []
-liczba2 = []
-liczba3 = []
-liczba4 = []
-liczba5 = []
-biale = []
 
-# wczytaj globalnie
-liczba1.append(Image.open("img/liczby/blue1.png"))
-liczba1.append(Image.open("img/liczby/red1.png"))
-liczba1.append(Image.open("img/liczby/yellow1.png"))
-biale.append(Image.open("img/liczby/white1.png"))
-liczba2.append(Image.open("img/liczby/blue2.png"))
-liczba2.append(Image.open("img/liczby/red2.png"))
-liczba2.append(Image.open("img/liczby/yellow2.png"))
-biale.append(Image.open("img/liczby/white2.png"))
-liczba3.append(Image.open("img/liczby/blue3.png"))
-liczba3.append(Image.open("img/liczby/red3.png"))
-liczba3.append(Image.open("img/liczby/yellow3.png"))
-biale.append(Image.open("img/liczby/white3.png"))
-liczba4.append(Image.open("img/liczby/blue4.png"))
-liczba4.append(Image.open("img/liczby/red4.png"))
-liczba4.append(Image.open("img/liczby/yellow4.png"))
-biale.append(Image.open("img/liczby/white4.png"))
-liczba5.append(Image.open("img/liczby/blue5.png"))
-liczba5.append(Image.open("img/liczby/red5.png"))
-liczba5.append(Image.open("img/liczby/yellow5.png"))
-biale.append(Image.open("img/liczby/white5.png"))
+
 pustybit = (0, 15, 255)
 bialybit = (255, 255, 255)
 
@@ -66,12 +48,12 @@ bialybit = (255, 255, 255)
 RESTART = 0
 DEBUGGER = 0
 STAN = 1
-OTW = 1
+OTW = 0
 MULTI = 0
 INFO1 = StringVar
 INFO2 = StringVar
 ZAPIS = 0
-USUN = 1
+USUN = 0
 root = Tk()
 debug = Tk()
 debug.withdraw()
@@ -80,9 +62,8 @@ debug.withdraw()
 def szukajloga(ktore):
     logo = Image.open("img/logo.png")
     box3 = logo.getbbox()
-    PIL.ImageGrab.grab(bbox=None)
     img = ImageGrab.grab()
-    koordyEkranu = [0, 0, 1920, 800]
+    koordyEkranu = [0, 0, img.size[0], img.size[1]]
     if (ktore == 0):
         print("ktore logo?")
     if (ktore == 1):
@@ -178,58 +159,6 @@ def szukajwoknie2(oknostart, okno, szukany):
     return 0
 
 
-def szukajbialego(oknostart, okno):
-    img = ImageGrab.grab(bbox=oknostart + okno)
-    szer = okno[0] - oknostart[0]
-    wys = okno[1] - oknostart[1]
-    for g in range(5):
-        box1 = biale[g].getbbox()
-        sum = box1[2] * box1[3]
-        for a in range(0, szer):
-            for b in range(0, wys):
-                cordinate2 = a, b
-                if (img.getpixel(cordinate2)) == bialybit:
-                    h = 1
-                    c = 0
-                    for j in range(0, box1[2]):
-                        for i in range(0, box1[3]):
-                            if (c == 1):
-                                h = 0
-                                c = 0
-                                break
-                            if (h == sum):
-                                return g + 1
-                            else:
-                                cordinate1 = j, i
-                                cordinate3 = j + cordinate2[0], i + cordinate2[1]
-                                if (biale[g].getpixel(cordinate1) == pustybit):
-                                    h = h + 1
-                                    continue
-                                else:
-                                    if cordinate3[0] < szer:
-                                        if cordinate3[1] < wys:
-                                            if img.getpixel(cordinate3) == bialybit:
-                                                h = h + 1
-                                                if (h == sum):
-                                                    return g + 1
-                                                continue
-                                            else:
-                                                h = 0
-                                                c = 1
-                                                break
-                                        else:
-                                            h = 0
-                                            c = 1
-                                            break
-                                    else:
-                                        h = 0
-                                        c = 1
-                                        break
-
-    # print("nie znaleziono liczby")'''
-    return 0
-
-
 def main():
     print("wczytywanie menu")
     menu()
@@ -250,6 +179,18 @@ def test():
             DEBUGGER = 0
             debug.withdraw()
 
+
+def test2():
+    img = liczbatest
+    szukany = liczby[1]
+    coord = 1,1
+    pix1=img.getpixel(coord)
+    pix2=szukany.getpixel(coord)
+    tolerancja = 1
+    if fabs(pix1[0] - pix2[0])<tolerancja and fabs(pix1[1] == pix2[1])<tolerancja and fabs(pix1[2] == pix2[2])<tolerancja:
+        print("zgodne")
+    else:
+        print("niezgodne")
 
 def debuguj():
     global DEBUGGER
@@ -288,6 +229,8 @@ def debuguj():
     middleFrame.pack(side=LEFT)
     buttons = Button(debug, text="PODMIEN", fg="red", command=lambda: probka(variable.get()))
     buttons.pack()
+    button5 = Button(leftFrame, text="TEST", fg="red", command=test2)
+    button5.pack()
     label0 = Label(debug, fg="red", text="DEBUGER słóży do podmieniania podstawowych grafik nawigujących bota")
     label0.pack()
     label1 = Label(debug, fg="red",
@@ -543,7 +486,7 @@ def start1():
                     INFO1.set("OTWIERANIE")
                     Tk.update(root)
                     otwieranie(oknoeqS1, oknoeq1, sprawdzanie)
-                    if (sprawdzanie > 45):
+                    if (sprawdzanie > 150):
                         sprawdzanie = 1
                         if USUN == 1:
                             usun(oknostart1, okno1, oknoeqS1, oknoeq1)
@@ -665,40 +608,13 @@ def start2():
 
 
 def szukajliczb(k, oknoMale1, oknoMale2):
-    for s in range(0, 3):
-        temp = liczba1[s]
+    for i in range(0,6):
+        temp = liczby[i]
         szukane = szukajwoknie2(oknoMale1, oknoMale2, temp)
         if (szukane == 1):
-            print("Znaleziono 1")
-            return 1
-    for s in range(0, 3):
-        temp = liczba2[s]
-        szukane = szukajwoknie2(oknoMale1, oknoMale2, temp)
-        if (szukane == 1):
-            print("Znaleziono 2")
-            return 2
-    for s in range(0, 3):
-        temp = liczba3[s]
-        szukane = szukajwoknie2(oknoMale1, oknoMale2, temp)
-        if (szukane == 1):
-            print("Znaleziono 3")
-            return 3
-    for s in range(0, 3):
-        temp = liczba4[s]
-        szukane = szukajwoknie2(oknoMale1, oknoMale2, temp)
-        if (szukane == 1):
-            print("Znaleziono 4")
-            return 4
-    for s in range(0, 3):
-        temp = liczba5[s]
-        szukane = szukajwoknie2(oknoMale1, oknoMale2, temp)
-        if (szukane == 1):
-            print("Znaleziono 5")
-            return 5
-    szuk = szukajbialego(oknoMale1, oknoMale2)
-    if (szuk > 0):
-        print("Znaleziono ", szuk, "białe")
-        return szuk
+            print("Znaleziono ",i)
+            return i
+
     # ilosc  prob przed restartem
     if MULTI == 1:
         if (k > 20):
@@ -936,12 +852,12 @@ def checkboxy():
     # OKNO1
     oknostart1 = koordyLoga1
     okno1 = oknostart1[0] + 780, oknostart1[1] + 610
-    oknoMaleS1 = oknostart1[0] + 395, oknostart1[1] + 251
-    oknoMale1 = oknoMaleS1[0] + 70, oknoMaleS1[1] + 55
+    oknoMaleS1 = oknostart1[0] + 355, oknostart1[1] + 200
+    oknoMale1 = oknoMaleS1[0] + 90, oknoMaleS1[1] + 70
     ekipunek1 = szukajwoknie(oknostart1, okno1, eq)
     if (ekipunek1 == 0):
         INFO1.set("nie znaleziono ekwipunku w 1 kliencie")
-    oknoeqS1 = ekipunek1[0] - 145, ekipunek1[1] + 85
+    oknoeqS1 = ekipunek1[0] - 20, ekipunek1[1] - 355
     oknoeq1 = oknoeqS1[0] + 165, oknoeqS1[1] + 295
 
     # OKNO2
