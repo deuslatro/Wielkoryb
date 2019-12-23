@@ -168,32 +168,43 @@ def szukajztolerancja(oknostart, okno, szukany):
         for b in range(0, wys):
             cordinate2 = a, b
             cordinate1 = 0, 0
-            if (img.getpixel(cordinate2)) == (szukany.getpixel(cordinate1)):
-                print("pierwszy ok")
+            pix1 = img.getpixel(cordinate2)
+            pix2 = szukany.getpixel(cordinate1)
+            tolerancja = 1
+
+            if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(pix1[1] - pix2[1]) <= tolerancja and fabs(pix1[2] - pix2[2]) <= tolerancja:
+                #print(fabs(pix1[0] - pix2[0]), fabs(pix1[1] - pix2[1]), fabs(pix1[2] - pix2[2]))
+                #print(a,b)
                 h = 1
                 a = 0
-                for j in range(0, box1[2]):
-                    if (a == 1):
-                        break
-                    for i in range(0, box1[3]):
-                        if (h == sum):
-                            return 1
-                        else:
-                            cordinate1 = j, i
-                            cordinate3 = j + cordinate2[0], i + cordinate2[1]
-                            if (szukany.getpixel(cordinate1) == pustybit):
-                                h = h + 1
-                                continue
+                if((szer - a > box1[2]) and (wys - b >box1[3])):
+
+                    for j in range(0, box1[2]):
+                        if (a == 1):
+                            break
+                        for i in range(0, box1[3]):
+                            if (h == sum):
+                                return 1
                             else:
-                                if img.getpixel(cordinate3) == szukany.getpixel(cordinate1):
+                                cordinate1 = j, i
+                                cordinate3 = j + cordinate2[0], i + cordinate2[1]
+                                if (szukany.getpixel(cordinate1) == pustybit):
                                     h = h + 1
-                                    print(h,"/",sum)
-                                    if (h == sum):
-                                        return 1
+                                    continue
                                 else:
-                                    h = 0
-                                    a = 1
-                                    break
+                                    pix1 = img.getpixel(cordinate3)
+                                    pix2 = szukany.getpixel(cordinate1)
+                                    tolerancja = 1
+                                    if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(pix1[1] - pix2[1]) <= tolerancja and fabs(pix1[2] - pix2[2]) <= tolerancja:
+                                        h = h + 1
+                                        print(h,"/",sum)
+                                        if (h == sum):
+                                            return 1
+                                    else:
+                                        h = 0
+                                        a = 1
+                                        break
+
     return 0
 
 def main():
@@ -223,7 +234,8 @@ def test2():
     coord = 1,1
     pix1=img.getpixel(coord)
     pix2=szukany.getpixel(coord)
-    tolerancja = 3
+    tolerancja = 2
+    print(fabs(pix1[0] - pix2[0]), fabs(pix1[1] == pix2[1]), fabs(pix1[2] == pix2[2]))
     if fabs(pix1[0] - pix2[0])<=tolerancja and fabs(pix1[1] == pix2[1])<=tolerancja and fabs(pix1[2] == pix2[2])<=tolerancja:
         print("zgodne")
     else:
@@ -523,7 +535,7 @@ def start1():
                     INFO1.set("OTWIERANIE")
                     Tk.update(root)
                     otwieranie(oknoeqS1, oknoeq1, sprawdzanie)
-                    if (sprawdzanie > 150):
+                    if (sprawdzanie > 45):
                         sprawdzanie = 1
                         if USUN == 1:
                             usun(oknostart1, okno1, oknoeqS1, oknoeq1)
@@ -649,15 +661,15 @@ def szukajliczb(k, oknoMale1, oknoMale2):
         temp = liczby[i]
         szukane = szukajztolerancja(oknoMale1, oknoMale2, temp)
         if (szukane == 1):
-            print("Znaleziono ",i)
-            return i
+            print("Znaleziono ",i+1)
+            return i+1
 
     # ilosc  prob przed restartem
     if MULTI == 1:
         if (k > 20):
             return 6
     # ustalenie po ilu powtórzeniach restart
-    if (k > 90):
+    if (k > 150):
         return 6
 
     return 0
