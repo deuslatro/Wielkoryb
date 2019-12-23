@@ -105,7 +105,6 @@ def szukajwoknie(oknostart, okno, szukany):
             koordy2 = a, b
             koordy1 = 0, 0
             if (img.getpixel(koordy2)) == (szukany.getpixel(koordy1)):
-
                 # pierwszy pixel sie zgadza
                 for j in range(0, box1[2]):
                     for i in range(0, box1[3]):
@@ -159,6 +158,44 @@ def szukajwoknie2(oknostart, okno, szukany):
     return 0
 
 
+def szukajztolerancja(oknostart, okno, szukany):
+    box1 = szukany.getbbox()
+    img = ImageGrab.grab(bbox=oknostart + okno)
+    szer = okno[0] - oknostart[0]
+    wys = okno[1] - oknostart[1]
+    sum = box1[2] * box1[3]
+    for a in range(0, szer):
+        for b in range(0, wys):
+            cordinate2 = a, b
+            cordinate1 = 0, 0
+            if (img.getpixel(cordinate2)) == (szukany.getpixel(cordinate1)):
+                print("pierwszy ok")
+                h = 1
+                a = 0
+                for j in range(0, box1[2]):
+                    if (a == 1):
+                        break
+                    for i in range(0, box1[3]):
+                        if (h == sum):
+                            return 1
+                        else:
+                            cordinate1 = j, i
+                            cordinate3 = j + cordinate2[0], i + cordinate2[1]
+                            if (szukany.getpixel(cordinate1) == pustybit):
+                                h = h + 1
+                                continue
+                            else:
+                                if img.getpixel(cordinate3) == szukany.getpixel(cordinate1):
+                                    h = h + 1
+                                    print(h,"/",sum)
+                                    if (h == sum):
+                                        return 1
+                                else:
+                                    h = 0
+                                    a = 1
+                                    break
+    return 0
+
 def main():
     print("wczytywanie menu")
     menu()
@@ -186,8 +223,8 @@ def test2():
     coord = 1,1
     pix1=img.getpixel(coord)
     pix2=szukany.getpixel(coord)
-    tolerancja = 1
-    if fabs(pix1[0] - pix2[0])<tolerancja and fabs(pix1[1] == pix2[1])<tolerancja and fabs(pix1[2] == pix2[2])<tolerancja:
+    tolerancja = 3
+    if fabs(pix1[0] - pix2[0])<=tolerancja and fabs(pix1[1] == pix2[1])<=tolerancja and fabs(pix1[2] == pix2[2])<=tolerancja:
         print("zgodne")
     else:
         print("niezgodne")
@@ -610,7 +647,7 @@ def start2():
 def szukajliczb(k, oknoMale1, oknoMale2):
     for i in range(0,6):
         temp = liczby[i]
-        szukane = szukajwoknie2(oknoMale1, oknoMale2, temp)
+        szukane = szukajztolerancja(oknoMale1, oknoMale2, temp)
         if (szukane == 1):
             print("Znaleziono ",i)
             return i
@@ -619,7 +656,8 @@ def szukajliczb(k, oknoMale1, oknoMale2):
     if MULTI == 1:
         if (k > 20):
             return 6
-    if (k > 35):
+    # ustalenie po ilu powtórzeniach restart
+    if (k > 90):
         return 6
 
     return 0
