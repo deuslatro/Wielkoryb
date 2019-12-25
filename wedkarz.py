@@ -40,7 +40,6 @@ for i in range(1, 7):
     print(liczbaStr)
     liczby.append(liczbaTmp)
 
-
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
 
@@ -231,7 +230,6 @@ def active_search(sample, image):
     # tylko jezeli blad jest maly(wykryto czerwone okienko)
     if (mn < 0.25):
         # zwraca tylko czerwone okno
-        print("zgodność",mn)
         return large_image
     else:
         # zwraca 0 co ponowi próbe
@@ -249,10 +247,11 @@ def which_number(sample, image):
     # zwroc 1 jezeli maly blad(znaleziono)
     # zwroc 0 jezeli ma szukac dalej
     # tylko jezeli blad jest maly
-    if (mn < 0.08):
-        return 1
-    else:
+    if (mn < 0.05):
+        print("mn = ", mn)
         return 0
+    else:
+        return mn
 
 
 def main():
@@ -277,7 +276,16 @@ def test():
 
 
 def test2():
-    print("debugtest2")
+    szukane = cv2.imread("img/liczby/okno.png")
+    for i in range(0, 6):
+        print("sprawdzam liczbe o indeksie", i)
+        number = liczby[i]
+        fastStr = ('test/zrzut'+str(i)+'.png')
+        print(fastStr)
+        cv2.imwrite(fastStr, number)
+        cv2.imwrite('test/zrzuta.png', szukane)
+        if which_number(number, szukane) == 1:
+            print("znaleziono", i + 1)
 
 
 def debuguj():
@@ -696,37 +704,39 @@ def start2():
 
 
 def szukajliczb(k, oknoMale1, oknoMale2):
-    img = ImageGrab.grab(bbox=oknoMale1+oknoMale2)
+    img = ImageGrab.grab(bbox=oknoMale1 + oknoMale2)
     image = numpy.array(img)
     # Convert RGB to BGR
     image = image[:, :, ::-1].copy()
     sample = cv2.imread("img/liczby/okno.png")
-
+    probability = []
     szukane = active_search(sample, image)
     if isinstance(szukane, int):
-        print("brak okna")
+        return 0
     else:
         print("wyskoczylo okno")
-        for i in range (0,6):
+        for i in range(0, 6):
+            print("sprawdzam liczbe o indeksie",i)
             number = liczby[i]
-            if which_number(number,szukane) == 1:
-                print("znaleziono",i+1)
-                return (i+1)
+            probability.append(which_number(number, szukane))
+            if (probability[i] == 0):
+                print("znaleziono", i + 1)
+                return (i + 1)
+            print("szansa",i," = ",probability[i])
 
         print("nie rozpoznano liczby w oknie, utworzono zrzut wykrycia")
         cv2.imwrite("zrzut.png", szukane)
-        return 3
-
-
-
+        #zwraca indeks przykladu ktory byl najpodobniejszy do sprawdzanego
+        print("droga eliminacji otrzumano liczbe",probability.index(min(probability))+1)
+        return probability.index(min(probability))+1
 
     # ilosc  prob przed restartem
     if MULTI == 1:
         if (k > 20):
-            return 6
+            return 7
     # ustalenie po ilu powtórzeniach restart
-    if (k > 2000):
-        return 6
+    if (k > 1200):
+        return 7
 
     return 0
 
