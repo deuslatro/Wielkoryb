@@ -276,16 +276,7 @@ def test():
 
 
 def test2():
-    szukane = cv2.imread("img/liczby/okno.png")
-    for i in range(0, 6):
-        print("sprawdzam liczbe o indeksie", i)
-        number = liczby[i]
-        fastStr = ('test/zrzut'+str(i)+'.png')
-        print(fastStr)
-        cv2.imwrite(fastStr, number)
-        cv2.imwrite('test/zrzuta.png', szukane)
-        if which_number(number, szukane) == 1:
-            print("znaleziono", i + 1)
+    print("test2DEBUG")
 
 
 def debuguj():
