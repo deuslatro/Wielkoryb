@@ -1,5 +1,12 @@
-0. Działanie bota (inny system łowienia)
-1. wspólna tablica na wszyskie obrazki ryb(nie wiadomo czy potrzebne)
-2. wywalenie funkcji sprawdzającej z maską(niepotrzebne na nodii)[chyba]
-3. Sprawdzanie Rozdziałki (wypisywanie ją do okienka)
-4. Zrobienie multiclienta na 4 clinty
+0. Działanie bota (inny system łowienia) <in progress ale jużcoś działa>
+*0.1 porównanie wyników jeżeli niejednoznaczne i wybranie najbliższego
+1. wspólna tablica na wszyskie obrazki ryb(nie wiadomo czy potrzebne) <zrobie przy ogarnianiu kodu>
+2. wywalenie funkcji sprawdzającej z maską(niepotrzebne na nodii)[chyba] <sprzątanie kodu>
+*2.1 Wywalenie większej iości zbędnego kodu
+*2.2 funkcja zczytująca zawartość folderu do tablicy
+3. Sprawdzanie Rozdziałki (wypisywanie ją do okienka) <soon>
+*3.1 (ładniejsze i lepsze GUI)
+*3.2 Aktywne STOP w GUI/Hotkeye które uda się zmienić w .exe
+4. Zrobienie multiclienta na 4 clinty <soon>
+*4.1 wielowątkowość (1 wątek 1 klient)
+** wymaga to przerobienia funkcji start
