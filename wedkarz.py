@@ -1,10 +1,15 @@
 import time
 import random
 from math import fabs
+
+import numpy
 import pyautogui
 import PIL
 from tkinter import *
 from PIL import ImageGrab, ImageDraw, Image
+import os
+import cv2
+import numpy as np
 
 # wczytanie pozostalych grafik
 robak = Image.open("img/robak.png")
@@ -27,18 +32,17 @@ kosz = Image.open("img/kosz.png")
 usuwanie = Image.open("img/usun.png")
 puste = Image.open("img/puste.png")
 shiri = Image.open("img/shiri.png")
-liczbatest = Image.open("img/liczba1test.png")
 
 liczby = []
-for i in range(1,7):
-    liczbaStr=("img/liczba"+ str(i) +".png")
+for i in range(1, 7):
+    liczbaStr = ("img/liczby/liczba" + str(i) + ".png")
+    liczbaTmp = cv2.imread(liczbaStr)
     print(liczbaStr)
-    liczbaTmp = Image.open(liczbaStr)
     liczby.append(liczbaTmp)
+
 
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
-
 
 pustybit = (0, 15, 255)
 bialybit = (255, 255, 255)
@@ -172,12 +176,13 @@ def szukajztolerancja(oknostart, okno, szukany):
             pix2 = szukany.getpixel(cordinate1)
             tolerancja = 1
 
-            if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(pix1[1] - pix2[1]) <= tolerancja and fabs(pix1[2] - pix2[2]) <= tolerancja:
-                #print(fabs(pix1[0] - pix2[0]), fabs(pix1[1] - pix2[1]), fabs(pix1[2] - pix2[2]))
-                #print(a,b)
+            if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(pix1[1] - pix2[1]) <= tolerancja and fabs(
+                    pix1[2] - pix2[2]) <= tolerancja:
+                # print(fabs(pix1[0] - pix2[0]), fabs(pix1[1] - pix2[1]), fabs(pix1[2] - pix2[2]))
+                # print(a,b)
                 h = 1
                 a = 0
-                if((szer - a > box1[2]) and (wys - b >box1[3])):
+                if ((szer - a > box1[2]) and (wys - b > box1[3])):
 
                     for j in range(0, box1[2]):
                         if (a == 1):
@@ -195,17 +200,60 @@ def szukajztolerancja(oknostart, okno, szukany):
                                     pix1 = img.getpixel(cordinate3)
                                     pix2 = szukany.getpixel(cordinate1)
                                     tolerancja = 1
-                                    if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(pix1[1] - pix2[1]) <= tolerancja and fabs(pix1[2] - pix2[2]) <= tolerancja:
+                                    if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(
+                                            pix1[1] - pix2[1]) <= tolerancja and fabs(pix1[2] - pix2[2]) <= tolerancja:
                                         h = h + 1
-                                        print(h,"/",sum)
+                                        print(h, "/", sum)
                                         if (h == sum):
                                             return 1
                                     else:
                                         h = 0
                                         a = 1
                                         break
-
     return 0
+
+
+def active_search(sample, image):
+    # pobiera wycinek ze screena i porownuje do duzej probki z folderu
+    method = cv2.TM_SQDIFF_NORMED
+    small_image = sample
+    large_image = image
+    # zastosowanie metody by poznac"granice"
+    result = cv2.matchTemplate(small_image, large_image, method)
+    mn, _, mnLoc, _ = cv2.minMaxLoc(result)
+    # Draw the rectangle:
+    # koordynaty najlepszego znaleziska
+    MPx, MPy = mnLoc
+    # Step 2: Get the size of the template. This is the same size as the match.
+    trows, tcols = small_image.shape[:2]
+    # Przyciecie obrazka do najbardziej dopasowanego
+    large_image = large_image[MPy:MPy + trows, MPx:MPx + tcols]
+    # tylko jezeli blad jest maly(wykryto czerwone okienko)
+    if (mn < 0.25):
+        # zwraca tylko czerwone okno
+        print("zgodność",mn)
+        return large_image
+    else:
+        # zwraca 0 co ponowi próbe
+        return 0
+
+
+def which_number(sample, image):
+    # pobiera czerwone okno z liczba i porownuje do malej probki z folderu
+    method = cv2.TM_SQDIFF_NORMED
+    small_image = sample
+    large_image = image
+    # zastosowanie metody by poznac"granice"
+    result = cv2.matchTemplate(small_image, large_image, method)
+    mn, _, mnLoc, _ = cv2.minMaxLoc(result)
+    # zwroc 1 jezeli maly blad(znaleziono)
+    # zwroc 0 jezeli ma szukac dalej
+    # tylko jezeli blad jest maly
+    if (mn < 0.08):
+        return 1
+    else:
+        return 0
+
 
 def main():
     print("wczytywanie menu")
@@ -229,17 +277,8 @@ def test():
 
 
 def test2():
-    img = liczbatest
-    szukany = liczby[1]
-    coord = 1,1
-    pix1=img.getpixel(coord)
-    pix2=szukany.getpixel(coord)
-    tolerancja = 2
-    print(fabs(pix1[0] - pix2[0]), fabs(pix1[1] == pix2[1]), fabs(pix1[2] == pix2[2]))
-    if fabs(pix1[0] - pix2[0])<=tolerancja and fabs(pix1[1] == pix2[1])<=tolerancja and fabs(pix1[2] == pix2[2])<=tolerancja:
-        print("zgodne")
-    else:
-        print("niezgodne")
+    print("debugtest2")
+
 
 def debuguj():
     global DEBUGGER
@@ -359,7 +398,7 @@ def probka(a):
         img.save("img/ryba6.png")
         print("zmieniono " + a)
     elif a == "Pstrag":
-        ryba7= img
+        ryba7 = img
         img.save("img/ryba7.png")
         print("zmieniono " + a)
     elif a == "Losos":
@@ -657,19 +696,36 @@ def start2():
 
 
 def szukajliczb(k, oknoMale1, oknoMale2):
-    for i in range(0,6):
-        temp = liczby[i]
-        szukane = szukajztolerancja(oknoMale1, oknoMale2, temp)
-        if (szukane == 1):
-            print("Znaleziono ",i+1)
-            return i+1
+    img = ImageGrab.grab(bbox=oknoMale1+oknoMale2)
+    image = numpy.array(img)
+    # Convert RGB to BGR
+    image = image[:, :, ::-1].copy()
+    sample = cv2.imread("img/liczby/okno.png")
+
+    szukane = active_search(sample, image)
+    if isinstance(szukane, int):
+        print("brak okna")
+    else:
+        print("wyskoczylo okno")
+        for i in range (0,6):
+            number = liczby[i]
+            if which_number(number,szukane) == 1:
+                print("znaleziono",i+1)
+                return (i+1)
+
+        print("nie rozpoznano liczby w oknie, utworzono zrzut wykrycia")
+        cv2.imwrite("zrzut.png", szukane)
+        return 3
+
+
+
 
     # ilosc  prob przed restartem
     if MULTI == 1:
         if (k > 20):
             return 6
     # ustalenie po ilu powtórzeniach restart
-    if (k > 150):
+    if (k > 2000):
         return 6
 
     return 0
@@ -756,7 +812,6 @@ def otwieranie(oknoeq1, oknoeq2, sprawdzanie):
             pyautogui.click(button='right')
 
 
-
 def otw():
     global OTW
     if OTW == 0:
@@ -787,6 +842,7 @@ def usu():
         USUN = 1
     else:
         USUN = 0
+
 
 # MENU
 def menu():
@@ -876,7 +932,6 @@ def menu():
     root.mainloop()
 
 
-
 def checkboxy():
     global MULTI
     global INFO1
@@ -954,5 +1009,6 @@ def checkboxy():
     if MULTI == 0:
         return (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1)
 
-print("proba 2")
+
+print("Wielkoryb v1.2")
 main()
