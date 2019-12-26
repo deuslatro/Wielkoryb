@@ -59,12 +59,11 @@ def szukajloga(ktore):
     box3 = logo.getbbox()
     img = ImageGrab.grab()
     koordyEkranu = [0, 0, img.size[0], img.size[1]]
-    if (ktore == 0):
-        print("ktore logo?")
-    if (ktore == 1):
-        koordyEkranu[2] = 980
-    if (ktore == 2):
-        koordyEkranu[0] = 981
+    if (MULTI == 1):
+        if (ktore == 1):
+            koordyEkranu[2] = 980
+        elif (ktore == 2):
+            koordyEkranu[0] = 981
     h = 0
     for a in range(koordyEkranu[0], (koordyEkranu[2])):
         for b in range(0, (koordyEkranu[3])):
@@ -346,6 +345,7 @@ def screen():
 
 
 def spacje(ilosc, koordylowienia):
+    time.sleep(0.1)
     pyautogui.moveTo(koordylowienia[0], koordylowienia[1], 0.1)
     for s in range(0, ilosc):
         r = (random.randint(1, 6)) / 100
@@ -610,10 +610,10 @@ def szukajliczb(k, oknoMale1, oknoMale2):
     if isinstance(szukane, int):
         # ilosc  prob przed restartem
         if MULTI == 1:
-            if (k > 800):
+            if (k > 600):
                 return 7
         # ustalenie po ilu powtórzeniach restart
-        if (k > 1200):
+        if (k > 900):
             return 7
         return 0
     else:
