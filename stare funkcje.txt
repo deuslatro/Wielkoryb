@@ -1,0 +1,75 @@
+def szukajztolerancja(oknostart, okno, szukany):
+    box1 = szukany.getbbox()
+    img = ImageGrab.grab(bbox=oknostart + okno)
+    szer = okno[0] - oknostart[0]
+    wys = okno[1] - oknostart[1]
+    sum = box1[2] * box1[3]
+    for a in range(0, szer):
+        for b in range(0, wys):
+            cordinate2 = a, b
+            cordinate1 = 0, 0
+            pix1 = img.getpixel(cordinate2)
+            pix2 = szukany.getpixel(cordinate1)
+            tolerancja = 1
+
+            if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(pix1[1] - pix2[1]) <= tolerancja and fabs(
+                    pix1[2] - pix2[2]) <= tolerancja:
+                # print(fabs(pix1[0] - pix2[0]), fabs(pix1[1] - pix2[1]), fabs(pix1[2] - pix2[2]))
+                # print(a,b)
+                h = 1
+                a = 0
+                if ((szer - a > box1[2]) and (wys - b > box1[3])):
+
+                    for j in range(0, box1[2]):
+                        if (a == 1):
+                            break
+                        for i in range(0, box1[3]):
+                            if (h == sum):
+                                return 1
+                            else:
+                                cordinate1 = j, i
+                                cordinate3 = j + cordinate2[0], i + cordinate2[1]
+                                if (szukany.getpixel(cordinate1) == pustybit):
+                                    h = h + 1
+                                    continue
+                                else:
+                                    pix1 = img.getpixel(cordinate3)
+                                    pix2 = szukany.getpixel(cordinate1)
+                                    tolerancja = 1
+                                    if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(
+                                            pix1[1] - pix2[1]) <= tolerancja and fabs(pix1[2] - pix2[2]) <= tolerancja:
+                                        h = h + 1
+                                        print(h, "/", sum)
+                                        if (h == sum):
+                                            return 1
+                                    else:
+                                        h = 0
+                                        a = 1
+                                        break
+    return 0
+
+
+def szukajwoknie2(oknostart, okno, szukany):
+    PIL.ImageGrab.grab(bbox=None)
+    img = ImageGrab.grab()
+    box1 = szukany.getbbox()
+    h = 0  # ilosc zgodnych bitow
+    for a in range(oknostart[0], okno[0]):
+        for b in range(oknostart[1], okno[1]):
+            koordy2 = a, b
+            koordy1 = 0, 0
+            if (img.getpixel(koordy2)) == (szukany.getpixel(koordy1)):
+                # pierwszy pixel sie zgadza
+                for j in range(0, box1[2]):
+                    for i in range(0, box1[3]):
+                        koordy1 = j, i
+                        koordy3 = j + koordy2[0], i + koordy2[1]
+                        if img.getpixel(koordy3) == szukany.getpixel(koordy1):
+                            h = h + 1
+                            if (h == (box1[2]) * (box1[3])):
+                                pozycja = koordy3
+                                return pozycja
+                        else:
+                            h = 0
+                            break
+    return 0

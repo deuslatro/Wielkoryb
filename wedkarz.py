@@ -1,37 +1,22 @@
 import time
+import os
 import random
-from math import fabs
-
 import numpy
 import pyautogui
 import PIL
 from tkinter import *
 from PIL import ImageGrab, ImageDraw, Image
-import os
 import cv2
-import numpy as np
 
 # wczytanie pozostalych grafik
 robak = Image.open("img/robak.png")
 low = Image.open("img/lowienie.png")
 eq = Image.open("img/eq.png")
-ryba1 = Image.open("img/ryba1.png")
-ryba2 = Image.open("img/ryba2.png")
-ryba3 = Image.open("img/ryba3.png")
-ryba4 = Image.open("img/ryba4.png")
-ryba5 = Image.open("img/ryba5.png")
-ryba6 = Image.open("img/ryba6.png")
-ryba7 = Image.open("img/ryba7.png")
-ryba8 = Image.open("img/ryba8.png")
-ryba9 = Image.open("img/ryba9.png")
-ryba10 = Image.open("img/ryba10.png")
-ryba11 = Image.open("img/ryba11.png")
 plaszcz = Image.open("img/plaszcz.png")
 pierscien = Image.open("img/pierscien.png")
 kosz = Image.open("img/kosz.png")
 usuwanie = Image.open("img/usun.png")
 puste = Image.open("img/puste.png")
-shiri = Image.open("img/shiri.png")
 
 liczby = []
 for i in range(1, 7):
@@ -39,6 +24,13 @@ for i in range(1, 7):
     liczbaTmp = cv2.imread(liczbaStr)
     print(liczbaStr)
     liczby.append(liczbaTmp)
+
+ryby = []
+for i in range(1, 13):
+    rybaStr = ("img/ryby/ryba" + str(i) + ".png")
+    rybaTmp = cv2.imread(rybaStr)
+    print(rybaStr)
+    ryby.append(rybaTmp)
 
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
@@ -73,7 +65,6 @@ def szukajloga(ktore):
         koordyEkranu[2] = 980
     if (ktore == 2):
         koordyEkranu[0] = 981
-
     h = 0
     for a in range(koordyEkranu[0], (koordyEkranu[2])):
         for b in range(0, (koordyEkranu[3])):
@@ -99,32 +90,6 @@ def szukajloga(ktore):
 
 
 def szukajwoknie(oknostart, okno, szukany):
-    PIL.ImageGrab.grab(bbox=None)
-    img = ImageGrab.grab()
-    box1 = szukany.getbbox()
-    h = 0  # ilosc zgodnych bitow
-    for a in range(oknostart[0], okno[0]):
-        for b in range(oknostart[1], okno[1]):
-            koordy2 = a, b
-            koordy1 = 0, 0
-            if (img.getpixel(koordy2)) == (szukany.getpixel(koordy1)):
-                # pierwszy pixel sie zgadza
-                for j in range(0, box1[2]):
-                    for i in range(0, box1[3]):
-                        koordy1 = j, i
-                        koordy3 = j + koordy2[0], i + koordy2[1]
-                        if img.getpixel(koordy3) == szukany.getpixel(koordy1):
-                            h = h + 1
-                            if (h == (box1[2]) * (box1[3])):
-                                pozycja = koordy3
-                                return pozycja
-                        else:
-                            h = 0
-                            break
-    return 0
-
-
-def szukajwoknie2(oknostart, okno, szukany):
     box1 = szukany.getbbox()
     img = ImageGrab.grab(bbox=oknostart + okno)
     szer = okno[0] - oknostart[0]
@@ -142,7 +107,8 @@ def szukajwoknie2(oknostart, okno, szukany):
                         break
                     for i in range(0, box1[3]):
                         if (h == sum):
-                            return 1
+                            pozycja = cordinate3[0] + oknostart[0], cordinate3[1] + oknostart[1]
+                            return pozycja
                         else:
                             cordinate1 = j, i
                             cordinate3 = j + cordinate2[0], i + cordinate2[1]
@@ -153,62 +119,12 @@ def szukajwoknie2(oknostart, okno, szukany):
                                 if img.getpixel(cordinate3) == szukany.getpixel(cordinate1):
                                     h = h + 1
                                     if (h == sum):
-                                        return 1
+                                        pozycja = cordinate3[0] + oknostart[0], cordinate3[1] + oknostart[1]
+                                        return pozycja
                                 else:
                                     h = 0
                                     a = 1
                                     break
-    return 0
-
-
-def szukajztolerancja(oknostart, okno, szukany):
-    box1 = szukany.getbbox()
-    img = ImageGrab.grab(bbox=oknostart + okno)
-    szer = okno[0] - oknostart[0]
-    wys = okno[1] - oknostart[1]
-    sum = box1[2] * box1[3]
-    for a in range(0, szer):
-        for b in range(0, wys):
-            cordinate2 = a, b
-            cordinate1 = 0, 0
-            pix1 = img.getpixel(cordinate2)
-            pix2 = szukany.getpixel(cordinate1)
-            tolerancja = 1
-
-            if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(pix1[1] - pix2[1]) <= tolerancja and fabs(
-                    pix1[2] - pix2[2]) <= tolerancja:
-                # print(fabs(pix1[0] - pix2[0]), fabs(pix1[1] - pix2[1]), fabs(pix1[2] - pix2[2]))
-                # print(a,b)
-                h = 1
-                a = 0
-                if ((szer - a > box1[2]) and (wys - b > box1[3])):
-
-                    for j in range(0, box1[2]):
-                        if (a == 1):
-                            break
-                        for i in range(0, box1[3]):
-                            if (h == sum):
-                                return 1
-                            else:
-                                cordinate1 = j, i
-                                cordinate3 = j + cordinate2[0], i + cordinate2[1]
-                                if (szukany.getpixel(cordinate1) == pustybit):
-                                    h = h + 1
-                                    continue
-                                else:
-                                    pix1 = img.getpixel(cordinate3)
-                                    pix2 = szukany.getpixel(cordinate1)
-                                    tolerancja = 1
-                                    if fabs(pix1[0] - pix2[0]) <= tolerancja and fabs(
-                                            pix1[1] - pix2[1]) <= tolerancja and fabs(pix1[2] - pix2[2]) <= tolerancja:
-                                        h = h + 1
-                                        print(h, "/", sum)
-                                        if (h == sum):
-                                            return 1
-                                    else:
-                                        h = 0
-                                        a = 1
-                                        break
     return 0
 
 
@@ -335,46 +251,35 @@ def debuguj():
 
 def probka(a):
     (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1) = checkboxy()
-    boxS = oknoeqS1[0] + 16, oknoeqS1[1] + 9
-    boxE = oknoeqS1[0] + 24, oknoeqS1[1] + 13
-    global ryba1
-    global ryba2
-    global ryba3
-    global ryba4
-    global ryba5
-    global ryba6
-    global ryba7
-    global ryba8
-    global ryba9
-    global ryba10
-    global ryba11
+    boxS = oknoeqS1[0] + 16, oknoeqS1[1] + 14
+    boxE = oknoeqS1[0] + 24, oknoeqS1[1] + 20
+    global ryby
     global plaszcz
     global pierscien
     global puste
     global robak
-    global shiri
     global low
     img = ImageGrab.grab(bbox=boxS + boxE)
     print("pobieram probke:", a)
     if a == "Karas":
-        ryba1 = img
-        img.save("img/ryba1.png")
+        ryby[0] = img
+        img.save("img/ryby/ryba1.png")
         print("zmieniono " + a)
     elif a == "Mandaryna":
-        ryba2 = img
-        img.save("img/ryba2.png")
+        ryby[1] = img
+        img.save("img/ryby/ryba2.png")
         print("zmieniono " + a)
     elif a == "Duzy Karas":
-        ryba3 = img
-        img.save("img/ryba3.png")
+        ryby[2] = img
+        img.save("img/ryby/ryba3.png")
         print("zmieniono " + a)
     elif a == "Karp":
-        ryba4 = img
-        img.save("img/ryba4.png")
+        ryby[3] = img
+        img.save("img/ryby/ryba4.png")
         print("zmieniono " + a)
     elif a == "Slodka Ryba":
-        ryba5 = img
-        img.save("img/ryba5.png")
+        ryby[4] = img
+        img.save("img/ryby/ryba5.png")
         print("zmieniono " + a)
     elif a == "Plaszcz Uciekiniera":
         plaszcz = img
@@ -389,32 +294,32 @@ def probka(a):
         img.save("img/robak.png")
         print("zmieniono " + a)
     elif a == "Shiri":
-        shiri = img
-        img.save("img/shiri.png")
+        ryby[5] = img
+        img.save("img/ryby/ryba12.png")
         print("zmieniono " + a)
     elif a == "nowa3":
-        ryba6 = img
-        img.save("img/ryba6.png")
+        ryby[6] = img
+        img.save("img/ryby/ryba6.png")
         print("zmieniono " + a)
     elif a == "Pstrag":
-        ryba7 = img
-        img.save("img/ryba7.png")
+        ryby[7] = img
+        img.save("img/ryby/ryba7.png")
         print("zmieniono " + a)
     elif a == "Losos":
-        ryba8 = img
-        img.save("img/ryba8.png")
+        ryby[8] = img
+        img.save("img/ryby/ryba8.png")
         print("zmieniono " + a)
     elif a == "Amur":
-        ryba9 = img
-        img.save("img/ryba9.png")
+        ryby[9] = img
+        img.save("img/ryby/ryba9.png")
         print("zmieniono " + a)
     elif a == "nowa1":
-        ryba10 = img
-        img.save("img/ryba10.png")
+        ryby[10] = img
+        img.save("img/ryby/ryba10.png")
         print("zmieniono " + a)
     elif a == "nowa2":
-        ryba11 = img
-        img.save("img/ryba11.png")
+        ryby[11] = img
+        img.save("img/ryby/ryba11.png")
         print("zmieniono " + a)
     elif a == "Puste":
         puste = img
@@ -557,7 +462,7 @@ def start1():
         while (lowie1 == 0):
             lowie1 = szukajliczb(k, oknoMaleS1, oknoMale1)
             k = k + 1
-            if (lowie1 == 6):
+            if (lowie1 == 7):
                 RESTART += 1
                 INFO1.set("Restart...")
                 Tk.update(root)
@@ -646,14 +551,14 @@ def start2():
             if (lowie2 == 0):
                 lowie2 = szukajliczb(k, oknoMaleS2, oknoMale2)
             k = k + 1
-            if (lowie1 == 6):
+            if (lowie1 == 7):
                 print("restart")
                 INFO1.set("Restart...")
                 Tk.update(root)
                 RESTART += 1
                 time.sleep(4)
                 start2()
-            if (lowie2 == 6):
+            if (lowie2 == 7):
                 print("restart")
                 INFO2.set("Restart...")
                 Tk.update(root)
@@ -703,32 +608,30 @@ def szukajliczb(k, oknoMale1, oknoMale2):
     probability = []
     szukane = active_search(sample, image)
     if isinstance(szukane, int):
+        # ilosc  prob przed restartem
+        if MULTI == 1:
+            if (k > 800):
+                return 7
+        # ustalenie po ilu powtórzeniach restart
+        if (k > 1200):
+            return 7
         return 0
     else:
         print("wyskoczylo okno")
         for i in range(0, 6):
-            print("sprawdzam liczbe o indeksie",i)
+            # print("sprawdzam liczbe o indeksie",i)
             number = liczby[i]
             probability.append(which_number(number, szukane))
             if (probability[i] == 0):
                 print("znaleziono", i + 1)
                 return (i + 1)
-            print("szansa",i," = ",probability[i])
+            # print("szansa",i," = ",probability[i])
 
         print("nie rozpoznano liczby w oknie, utworzono zrzut wykrycia")
         cv2.imwrite("zrzut.png", szukane)
-        #zwraca indeks przykladu ktory byl najpodobniejszy do sprawdzanego
-        print("droga eliminacji otrzumano liczbe",probability.index(min(probability))+1)
-        return probability.index(min(probability))+1
-
-    # ilosc  prob przed restartem
-    if MULTI == 1:
-        if (k > 20):
-            return 7
-    # ustalenie po ilu powtórzeniach restart
-    if (k > 1200):
-        return 7
-
+        # zwraca indeks przykladu ktory byl najpodobniejszy do sprawdzanego
+        print("droga eliminacji otrzumano liczbe", probability.index(min(probability)) + 1)
+        return probability.index(min(probability)) + 1
     return 0
 
 
@@ -740,109 +643,12 @@ def otwieranie(oknoeq1, oknoeq2, sprawdzanie):
             pyautogui.moveTo(oknoeq1[0] + 0, 5 + (oknoeq1[1] + (s * 32)), 1)
 
     if sprawdzanie % 6 == 3:
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba1)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba2)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba3)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba4)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba5)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, shiri)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba6)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba7)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba8)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba9)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba10)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-        ryba = szukajwoknie(oknoeq1, oknoeq2, ryba11)
-        if (ryba != 0):
-            pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-            time.sleep(0.35)
-            pyautogui.click(button='right')
-
-
-def otw():
-    global OTW
-    if OTW == 0:
-        OTW = 1
-    else:
-        OTW = 0
-
-
-def mlt():
-    global MULTI
-    if MULTI == 0:
-        MULTI = 1
-    else:
-        MULTI = 0
-
-
-def zap():
-    global ZAPIS
-    if ZAPIS == 0:
-        ZAPIS = 1
-    else:
-        ZAPIS = 0
-
-
-def usu():
-    global USUN
-    if USUN == 0:
-        USUN = 1
-    else:
-        USUN = 0
+        for i in range(0, 12):
+            ryba = szukajwoknie(oknoeq1, oknoeq2, ryby[i])
+            if (ryba != 0):
+                pyautogui.moveTo(ryba[0], ryba[1], 0.25)
+                time.sleep(0.35)
+                pyautogui.click(button='right')
 
 
 # MENU
@@ -934,10 +740,8 @@ def menu():
 
 
 def checkboxy():
-    global MULTI
     global INFO1
     global INFO2
-    global ZAPIS
     INFO1.set("TEST checkboxow")
     if MULTI == 1:
         INFO2.set("TEST checkboxow")
@@ -963,7 +767,7 @@ def checkboxy():
     ekipunek1 = szukajwoknie(oknostart1, okno1, eq)
     if (ekipunek1 == 0):
         INFO1.set("nie znaleziono ekwipunku w 1 kliencie")
-    oknoeqS1 = ekipunek1[0] - 20, ekipunek1[1] - 355
+    oknoeqS1 = ekipunek1[0] + 13, ekipunek1[1] - 270
     oknoeq1 = oknoeqS1[0] + 165, oknoeqS1[1] + 295
 
     # OKNO2
@@ -975,7 +779,7 @@ def checkboxy():
         ekipunek2 = szukajwoknie(oknostart2, okno2, eq)
         if (ekipunek2 == 0):
             INFO2.set("nie znaleziono ekwipunku w 2 kliencie")
-        oknoeqS2 = ekipunek2[0] - 145, ekipunek2[1] + 85
+        oknoeqS2 = ekipunek2[0] + 13, ekipunek2[1] - 270
         oknoeq2 = oknoeqS2[0] + 165, oknoeqS2[1] + 295
 
     if ZAPIS == 1:
@@ -993,17 +797,13 @@ def checkboxy():
             rysujokno2 = oknostart2 + okno2
             rysujoknoM2 = oknoMaleS2 + oknoMale2
             rysujeq2 = oknoeqS2 + oknoeq2
-
             # rysowanie
             draw.rectangle(rysujokno2, outline=128, width=3)
             draw.rectangle(rysujoknoM2, outline=(32, 0, 255), width=3)
             draw.rectangle(rysujeq2, outline=(64, 255, 128), width=3)
-
-    if ZAPIS == 1:
         img.save("boxy.png")
         time.sleep(0.5)
 
-    # print(oknoeqS1,oknoeq1)
     if MULTI == 1:
         return (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1, oknostart2, okno2, oknoMaleS2,
                 oknoMale2, oknoeqS2, oknoeq2, ekipunek2)
@@ -1011,5 +811,37 @@ def checkboxy():
         return (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1)
 
 
-print("Wielkoryb v1.2")
+def otw():
+    global OTW
+    if OTW == 0:
+        OTW = 1
+    else:
+        OTW = 0
+
+
+def mlt():
+    global MULTI
+    if MULTI == 0:
+        MULTI = 1
+    else:
+        MULTI = 0
+
+
+def zap():
+    global ZAPIS
+    if ZAPIS == 0:
+        ZAPIS = 1
+    else:
+        ZAPIS = 0
+
+
+def usu():
+    global USUN
+    if USUN == 0:
+        USUN = 1
+    else:
+        USUN = 0
+
+
+print("Wielkoryb v1.6")
 main()
