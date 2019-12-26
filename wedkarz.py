@@ -90,6 +90,7 @@ def szukajloga(ktore):
 
 
 def szukajwoknie(oknostart, okno, szukany):
+    print("Nowe szukanie")
     box1 = szukany.getbbox()
     img = ImageGrab.grab(bbox=oknostart + okno)
     szer = okno[0] - oknostart[0]
@@ -106,6 +107,7 @@ def szukajwoknie(oknostart, okno, szukany):
                     if (a == 1):
                         break
                     for i in range(0, box1[3]):
+                        print(h)
                         if (h == sum):
                             pozycja = cordinate3[0] + oknostart[0], cordinate3[1] + oknostart[1]
                             return pozycja
@@ -768,8 +770,9 @@ def checkboxy():
     ekipunek1 = szukajwoknie(oknostart1, okno1, eq)
     if (ekipunek1 == 0):
         INFO1.set("nie znaleziono ekwipunku w 1 kliencie")
-    oknoeqS1 = ekipunek1[0] - 10, ekipunek1[1] - 350
-    oknoeq1 = oknoeqS1[0] + 165, oknoeqS1[1] + 295
+    else:
+        oknoeqS1 = ekipunek1[0] - 15, ekipunek1[1] - 350
+        oknoeq1 = oknoeqS1[0] + 165, oknoeqS1[1] + 295
 
     # OKNO2
     if (MULTI == 1):
@@ -780,7 +783,7 @@ def checkboxy():
         ekipunek2 = szukajwoknie(oknostart2, okno2, eq)
         if (ekipunek2 == 0):
             INFO2.set("nie znaleziono ekwipunku w 2 kliencie")
-        oknoeqS2 = ekipunek2[0] - 10, ekipunek2[1] - 350
+        oknoeqS2 = ekipunek2[0] - 15, ekipunek2[1] - 350
         oknoeq2 = oknoeqS2[0] + 165, oknoeqS2[1] + 295
 
     if ZAPIS == 1:
@@ -789,10 +792,14 @@ def checkboxy():
         rysujokno1 = oknostart1 + okno1
         rysujoknoM1 = oknoMaleS1 + oknoMale1
         rysujeq1 = oknoeqS1 + oknoeq1
+        boxS = oknoeqS1[0] + 16, oknoeqS1[1] + 14
+        boxE = oknoeqS1[0] + 24, oknoeqS1[1] + 20
+        rysujDebugg = boxS + boxE
         # rysowanie
         draw.rectangle(rysujokno1, outline=128, width=3)
         draw.rectangle(rysujoknoM1, outline=(32, 0, 255), width=3)
         draw.rectangle(rysujeq1, outline=(64, 255, 128), width=3)
+        draw.rectangle(rysujDebugg, outline=(128, 255, 96), width=1)
 
         if (MULTI == 1):
             rysujokno2 = oknostart2 + okno2
