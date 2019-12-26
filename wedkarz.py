@@ -59,11 +59,12 @@ def szukajloga(ktore):
     box3 = logo.getbbox()
     img = ImageGrab.grab()
     koordyEkranu = [0, 0, img.size[0], img.size[1]]
+    print(img.size[0]/2)
     if (MULTI == 1):
         if (ktore == 1):
-            koordyEkranu[2] = 980
+            koordyEkranu[2] = int(img.size[0]/2)
         elif (ktore == 2):
-            koordyEkranu[0] = 981
+            koordyEkranu[0] = int((img.size[0]/2)+1)
     h = 0
     for a in range(koordyEkranu[0], (koordyEkranu[2])):
         for b in range(0, (koordyEkranu[3])):
@@ -767,19 +768,19 @@ def checkboxy():
     ekipunek1 = szukajwoknie(oknostart1, okno1, eq)
     if (ekipunek1 == 0):
         INFO1.set("nie znaleziono ekwipunku w 1 kliencie")
-    oknoeqS1 = ekipunek1[0] + 13, ekipunek1[1] - 270
+    oknoeqS1 = ekipunek1[0] - 10, ekipunek1[1] - 350
     oknoeq1 = oknoeqS1[0] + 165, oknoeqS1[1] + 295
 
     # OKNO2
     if (MULTI == 1):
         oknostart2 = koordyLoga2
         okno2 = oknostart2[0] + 780, oknostart2[1] + 610
-        oknoMaleS2 = oknostart2[0] + 395, oknostart2[1] + 251
-        oknoMale2 = oknoMaleS2[0] + 70, oknoMaleS2[1] + 55
+        oknoMaleS2 = oknostart2[0] + 355, oknostart2[1] + 200
+        oknoMale2 = oknoMaleS2[0] + 90, oknoMaleS2[1] + 70
         ekipunek2 = szukajwoknie(oknostart2, okno2, eq)
         if (ekipunek2 == 0):
             INFO2.set("nie znaleziono ekwipunku w 2 kliencie")
-        oknoeqS2 = ekipunek2[0] + 13, ekipunek2[1] - 270
+        oknoeqS2 = ekipunek2[0] - 10, ekipunek2[1] - 350
         oknoeq2 = oknoeqS2[0] + 165, oknoeqS2[1] + 295
 
     if ZAPIS == 1:
