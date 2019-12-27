@@ -8,29 +8,35 @@ from tkinter import *
 from PIL import ImageGrab, ImageDraw, Image
 import cv2
 
-# wczytanie pozostalych grafik
-robak = Image.open("img/robak.png")
-low = Image.open("img/lowienie.png")
-eq = Image.open("img/eq.png")
-plaszcz = Image.open("img/plaszcz.png")
-pierscien = Image.open("img/pierscien.png")
-kosz = Image.open("img/kosz.png")
-usuwanie = Image.open("img/usun.png")
-puste = Image.open("img/puste.png")
 
-liczby = []
-for i in range(1, 7):
-    liczbaStr = ("img/liczby/liczba" + str(i) + ".png")
-    liczbaTmp = cv2.imread(liczbaStr)
-    print(liczbaStr)
-    liczby.append(liczbaTmp)
+# Grafik do słowników (key to nazwa pliku) przykladowa petla zerujaca słownik:
+#  for key in liczby:
+#       liczby[key] = 0
 
-ryby = []
-for i in range(1, 13):
-    rybaStr = ("img/ryby/ryba" + str(i) + ".png")
-    rybaTmp = cv2.imread(rybaStr)
-    print(rybaStr)
-    ryby.append(rybaTmp)
+#Wczytaj zdjęcia by operować nimi biblioteką PIL(funkcja szukajwoknie)
+def load_images_toPIL(folder):
+    images = {}
+    for filename in os.listdir(folder):
+        img = Image.open(os.path.join(folder,filename))
+        if img is not None:
+            print(filename)
+            images[filename] = img
+    return images
+
+#Wczytaj zdjęcia by operować nimi w cv2(funkcje activeseartch,find_numbers etc)
+def load_images_tocv2(folder):
+    images = {}
+    for filename in os.listdir(folder):
+        img = cv2.imread(os.path.join(folder,filename))
+        if img is not None:
+            print(filename)
+            images[filename] = img
+    return images
+
+liczby = load_images_tocv2('img/liczby/')
+ryby = load_images_toPIL('img/ryby/')
+sample = load_images_toPIL('img/samples/')
+czerwoneokno = cv2.imread('img/CV2/okno.png')
 
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
@@ -55,7 +61,7 @@ debug.withdraw()
 
 
 def szukajloga(ktore):
-    logo = Image.open("img/logo.png")
+    logo = sample["logo.png"]
     box3 = logo.getbbox()
     img = ImageGrab.grab()
     koordyEkranu = [0, 0, img.size[0], img.size[1]]
@@ -90,7 +96,6 @@ def szukajloga(ktore):
 
 
 def szukajwoknie(oknostart, okno, szukany):
-    print("Nowe szukanie")
     box1 = szukany.getbbox()
     img = ImageGrab.grab(bbox=oknostart + okno)
     szer = okno[0] - oknostart[0]
@@ -107,7 +112,6 @@ def szukajwoknie(oknostart, okno, szukany):
                     if (a == 1):
                         break
                     for i in range(0, box1[3]):
-                        print(h)
                         if (h == sum):
                             pozycja = cordinate3[0] + oknostart[0], cordinate3[1] + oknostart[1]
                             return pozycja
@@ -128,7 +132,6 @@ def szukajwoknie(oknostart, okno, szukany):
                                     a = 1
                                     break
     return 0
-
 
 def active_search(sample, image):
     # pobiera wycinek ze screena i porownuje do duzej probki z folderu
@@ -177,7 +180,7 @@ def main():
     menu()
 
 
-def test():
+def debugger():
     global DEBUGGER
     global debug
     global MULTI
@@ -195,36 +198,39 @@ def test():
 
 def test2():
     print("test2DEBUG")
+    for key in ryby:
+        print(f'RYBA    :   {key}')
+        print(ryby[key])
 
 
 def debuguj():
     global DEBUGGER
     global debug
     OPTIONS = [
-        "ROBAK",
-        "WEDKA",
-        "Karas",
-        "Mandaryna",
-        "Duzy Karas",
-        "Karp",
-        "Slodka Ryba",
-        "Shiri",
-        "Plaszcz Uciekiniera",
-        "Pierscien Lucy",
-        "Puste",
-        "Pstrag",
-        "Losos",
-        "Amur",
-        "nowa1",
-        "nowa2",
-        "nowa3",
-        "TEST"
+        "robak.png",
+        "lowienie.png",
+        "ryba1.png",
+        "ryba2.png",
+        "ryba3.png",
+        "ryba4.png",
+        "ryba5.png",
+        "ryba6.png",
+        "ryba7.png",
+        "ryba8.png",
+        "ryba9.png",
+        "ryba10.png",
+        "ryba11.png",
+        "ryba12.png",
+        "plaszcz.png",
+        "pierscien.png",
+        "puste.png",
+        "test.png"
     ]
     variable = StringVar(debug)
     variable.set(OPTIONS[0])
     w = OptionMenu(debug, variable, *OPTIONS)
     w.pack()
-    debug.title("DEBUGGER v2.0")
+    debug.title("DEBUGGER v3.1")
     kolor = "gray"
     leftFrame = Frame(debug, bg=kolor)
     leftFrame.pack(side=LEFT)
@@ -234,17 +240,30 @@ def debuguj():
     middleFrame.pack(side=LEFT)
     buttons = Button(debug, text="PODMIEN", fg="red", command=lambda: probka(variable.get()))
     buttons.pack()
-    button5 = Button(leftFrame, text="TEST", fg="red", command=test2)
+    button5 = Button(debug, text="TEST2", fg="red", command=test2)
     button5.pack()
-    label0 = Label(debug, fg="red", text="DEBUGER słóży do podmieniania podstawowych grafik nawigujących bota")
+    label0 = Label(debug, fg="red", text="1.Wyłącz MultiClient przed debugowaniem")
     label0.pack()
-    label1 = Label(debug, fg="red",
-                   text="Pobiera i nadpisuje próbke danego przedmiotu z pierwszego slota EQ/ ikonke lowienia z F4")
+    label1 = Label(debug, fg="red",text="2.Pobierz i nadpisz próbke danego przedmiotu z pierwszego slota EQ/ ikonke lowienia z F4")
     label1.pack()
-    label2 = Label(debug, fg="red", text="By zamknac debuger uzyj ponownie klawisza DEBUG")
+    label2 = Label(debug, fg="red", text="3.Zaznacz ZapisPNG i zrób Checkboxy a zobaczysz obszar jaki kopiuje debugger(najmniejszy kwadracik)")
     label2.pack()
-    label3 = Label(debug, fg="red", text="DEBUGER nie działa z włączonym MULTICLIENT")
+    label3 = Label(debug, fg="red", text="OPIS POWSZECHNYCH PROBLEMÓW")
     label3.pack()
+    label6 = Label(debug, text="Nie wykryto loga - Sprawdz czy w folderze jest dobrze wykonana próbka logo.png", fg="red")
+    label6.pack(side=TOP)
+    label7 = Label(debug,text="Jeżeli nie masz pewności co do próbki zrób PRINTSCREEN i zastęp próbke swoim wycinkiem", fg="red")
+    label7.pack(side=TOP)
+    label8 = Label(debug, text="Nie wykryto robaka / wędki (jak up tylko można naprawić debuggerem)", fg="red")
+    label8.pack(side=TOP)
+    label9 = Label(debug, text="Rusza myszką ale nie klika - URUCHOM JAKO ADMINISTRATOR", fg="red")
+    label9.pack(side=TOP)
+    label10 = Label(debug,text="Klika na coś inne niż robak(zdebuguj robaka z 1 slota eq)", fg="red")
+    label10.pack(side=TOP)
+    label11 = Label(debug, text="Inne Problemy można zgłaszać na adres: www.xd@xd.pl", fg="red")
+    label11.pack(side=TOP)
+
+
     DEBUGGER = 0
     debug.protocol('WM_DELETE_WINDOW', debug.withdraw)
     debug.withdraw()
@@ -253,91 +272,27 @@ def debuguj():
 
 def probka(a):
     (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1) = checkboxy()
+    #Obszar pobierania próbki(można sprawdzić go checkboxem)
     boxS = oknoeqS1[0] + 16, oknoeqS1[1] + 14
     boxE = oknoeqS1[0] + 24, oknoeqS1[1] + 20
-    global ryby
-    global plaszcz
-    global pierscien
-    global puste
-    global robak
-    global low
     img = ImageGrab.grab(bbox=boxS + boxE)
     print("pobieram probke:", a)
-    if a == "Karas":
-        ryby[0] = img
-        img.save("img/ryby/ryba1.png")
-        print("zmieniono " + a)
-    elif a == "Mandaryna":
-        ryby[1] = img
-        img.save("img/ryby/ryba2.png")
-        print("zmieniono " + a)
-    elif a == "Duzy Karas":
-        ryby[2] = img
-        img.save("img/ryby/ryba3.png")
-        print("zmieniono " + a)
-    elif a == "Karp":
-        ryby[3] = img
-        img.save("img/ryby/ryba4.png")
-        print("zmieniono " + a)
-    elif a == "Slodka Ryba":
-        ryby[4] = img
-        img.save("img/ryby/ryba5.png")
-        print("zmieniono " + a)
-    elif a == "Plaszcz Uciekiniera":
-        plaszcz = img
-        img.save("img/plaszcz.png")
-        print("zmieniono " + a)
-    elif a == "Pierscien Lucy":
-        pierscien = img
-        img.save("img/pierscien.png")
-        print("zmieniono " + a)
-    elif a == "ROBAK":
-        robak = img
-        img.save("img/robak.png")
-        print("zmieniono " + a)
-    elif a == "Shiri":
-        ryby[5] = img
-        img.save("img/ryby/ryba12.png")
-        print("zmieniono " + a)
-    elif a == "nowa3":
-        ryby[6] = img
-        img.save("img/ryby/ryba6.png")
-        print("zmieniono " + a)
-    elif a == "Pstrag":
-        ryby[7] = img
-        img.save("img/ryby/ryba7.png")
-        print("zmieniono " + a)
-    elif a == "Losos":
-        ryby[8] = img
-        img.save("img/ryby/ryba8.png")
-        print("zmieniono " + a)
-    elif a == "Amur":
-        ryby[9] = img
-        img.save("img/ryby/ryba9.png")
-        print("zmieniono " + a)
-    elif a == "nowa1":
-        ryby[10] = img
-        img.save("img/ryby/ryba10.png")
-        print("zmieniono " + a)
-    elif a == "nowa2":
-        ryby[11] = img
-        img.save("img/ryby/ryba11.png")
-        print("zmieniono " + a)
-    elif a == "Puste":
-        puste = img
-        img.save("img/puste.png")
-        print("zmieniono " + a)
-    elif a == "WEDKA":
-        boxWS = oknostart1[0] + 560, oknostart1[1] + 580
-        boxWE = oknostart1[0] + 570, oknostart1[1] + 600
-        img = ImageGrab.grab(bbox=boxWS + boxWE)
-        low = img
-        img.save("img/lowienie.png")
-        print("zmieniono " + a)
-    elif a == "TEST":
-        pierscien = img
-        img.save("test.png")
-        print("zmieniono " + a)
+    for key in ryby:
+        if(a==key):
+            boxWS = oknostart1[0] + 560, oknostart1[1] + 580
+            boxWE = oknostart1[0] + 570, oknostart1[1] + 600
+            img = ImageGrab.grab(bbox=boxWS + boxWE)
+            img.save(f"img/ryby/{key}")
+            ryby[key]=img
+    for key in sample:
+        if(a=="lowienie.png"):
+            img.save(f"img/samples/{key}")
+            sample[key] = img
+        elif(a==key):
+            img.save(f"img/samples/{key}")
+            sample[key]=img
+    print(f'Zmieniono {a}')
+
 
 
 def screen():
@@ -372,7 +327,7 @@ def usun(oknostart, okno, oknoeq1, oknoeq2):
     INFO2.set("usuwanie śmieci...")
     Tk.update(root)
 
-    first = szukajwoknie(oknostart, okno, kosz)
+    first = szukajwoknie(oknostart, okno, sample["kosz.png"])
     if first == 0:
         INFO1.set("okno usuwania")
         INFO2.set("jest nieosiagalne")
@@ -380,7 +335,7 @@ def usun(oknostart, okno, oknoeq1, oknoeq2):
         time.sleep(5)
         return 0
     move(first)
-    second = szukajwoknie(oknostart, okno, usuwanie)
+    second = szukajwoknie(oknostart, okno, sample["usun.png"])
     if second == 0:
         INFO1.set("przycisk usuwania")
         INFO2.set("jest nieosiągalny")
@@ -391,17 +346,17 @@ def usun(oknostart, okno, oknoeq1, oknoeq2):
     border2 = border1[0] + 170, border1[1] + 200
 
     for i in range(8):  # 0 - 7
-        item1 = szukajwoknie(oknoeq1, oknoeq2, pierscien)
+        item1 = szukajwoknie(oknoeq1, oknoeq2, sample["pierscien.png"])
         if (item1 != 0):
-            slot = szukajwoknie(border1, border2, puste)
+            slot = szukajwoknie(border1, border2, sample["puste.png"])
             pyautogui.moveTo(item1[0], item1[1], 0.2)
             time.sleep(0.2)
             pyautogui.dragTo(slot[0], slot[1], 0.3)
 
-        item2 = szukajwoknie(oknoeq1, oknoeq2, plaszcz)
+        item2 = szukajwoknie(oknoeq1, oknoeq2, sample["plaszcz.png"])
         if (item2 != 0):
             print("plaszcz")
-            slot = szukajwoknie(border1, border2, puste)
+            slot = szukajwoknie(border1, border2, sample["puste.png"])
             pyautogui.moveTo(item2[0], item2[1], 0.2)
             time.sleep(0.2)
             pyautogui.dragTo(slot[0], slot[1], 0.3)
@@ -429,13 +384,13 @@ def start1():
     INFO1.set("STARTOWANIE")
     INFO2.set("NIEAKTYWNY")
     Tk.update(root)
-    koordyrobaka1 = szukajwoknie(oknostart1, okno1, robak)
+    koordyrobaka1 = szukajwoknie(oknostart1, okno1, sample["robak.png"])
     if (koordyrobaka1 == 0):
         INFO1.set("nie odnaleziono robaka")
         Tk.update(root)
         return 0
     # szukaj lowienia
-    koordylowienia1 = szukajwoknie(oknostart1, okno1, low)
+    koordylowienia1 = szukajwoknie(oknostart1, okno1, sample["low.png"])
     if (koordylowienia1 == 0):
         INFO1.set("nie odnaleziono wedki")
         Tk.update(root)
@@ -499,20 +454,20 @@ def start2():
     INFO2.set("STARTOWANIE")
     Tk.update(root)
 
-    koordyrobaka1 = szukajwoknie(oknostart1, okno1, robak)
+    koordyrobaka1 = szukajwoknie(oknostart1, okno1, sample["robak.png"])
     if (koordyrobaka1 == 0):
         INFO1.set("nie odnaleziono robaka")
         return 0
-    koordylowienia1 = szukajwoknie(oknostart1, okno1, low)
+    koordylowienia1 = szukajwoknie(oknostart1, okno1, sample["low.png"])
     if (koordylowienia1 == 0):
         INFO1.set("nie odnaleziono wedki")
         return 0
 
-    koordyrobaka2 = szukajwoknie(oknostart2, okno2, robak)
+    koordyrobaka2 = szukajwoknie(oknostart2, okno2, sample["robak.png"])
     if (koordyrobaka2 == 0):
         INFO2.set("nie odnaleziono robaka")
         return 0
-    koordylowienia2 = szukajwoknie(oknostart2, okno2, low)
+    koordylowienia2 = szukajwoknie(oknostart2, okno2, sample["low.png"])
     if (koordylowienia2 == 0):
         INFO2.set("nie odnaleziono wedki")
         return 0
@@ -607,27 +562,35 @@ def szukajliczb(k, oknoMale1, oknoMale2):
     image = numpy.array(img)
     # Convert RGB to BGR
     image = image[:, :, ::-1].copy()
-    sample = cv2.imread("img/liczby/okno.png")
     probability = []
-    szukane = active_search(sample, image)
+    szukane = active_search(czerwoneokno, image)
     if isinstance(szukane, int):
         # ilosc  prob przed restartem
         if MULTI == 1:
-            if (k > 600):
+            if (k > 800):
                 return 7
         # ustalenie po ilu powtórzeniach restart
-        if (k > 900):
+        if (k > 1100):
             return 7
         return 0
     else:
         print("wyskoczylo okno")
-        for i in range(0, 6):
+        i = 0
+
+        szukaneWys=szukane.shape[0]
+        for key in liczby:
+
+            # zabezpieczenie wysokości ( dobra strone warunek? xD)
+            if szukaneWys < liczby[key].shape[0]:
+                print("pobrano za mala probke by uniknac bledu 'znajduje' 4")
+                return 4
+
             # print("sprawdzam liczbe o indeksie",i)
-            number = liczby[i]
-            probability.append(which_number(number, szukane))
+            probability.append(which_number(liczby[key], szukane))
             if (probability[i] == 0):
-                print("znaleziono", i + 1)
+                print("znaleziono", key)
                 return (i + 1)
+            i = i + 1
             # print("szansa",i," = ",probability[i])
 
         print("nie rozpoznano liczby w oknie, utworzono zrzut wykrycia")
@@ -646,8 +609,8 @@ def otwieranie(oknoeq1, oknoeq2, sprawdzanie):
             pyautogui.moveTo(oknoeq1[0] + 0, 5 + (oknoeq1[1] + (s * 32)), 1)
 
     if sprawdzanie % 6 == 3:
-        for i in range(0, 12):
-            ryba = szukajwoknie(oknoeq1, oknoeq2, ryby[i])
+        for key in ryby:
+            ryba = szukajwoknie(oknoeq1, oknoeq2, ryby[key])
             if (ryba != 0):
                 pyautogui.moveTo(ryba[0], ryba[1], 0.25)
                 time.sleep(0.35)
@@ -660,8 +623,8 @@ def menu():
     global INFO2
     global root
     # root = Tk()
-    root.title("Wędkarz v.3.5")
-    kolor = "gray"
+    root.title("Wielkoryb v.1.8")
+    kolor = "snow3"
     leftFrame = Frame(root, bg=kolor)
     leftFrame.pack(side=LEFT)
     rightFrame = Frame(root)
@@ -672,8 +635,7 @@ def menu():
     INFO1.set("NIEAKTYWNY")
     INFO2 = StringVar()
     INFO2.set("NIEAKTYWNY")
-
-    label1 = Label(leftFrame, text="Wędkarz v.3.5", fg="blue", bg=kolor)
+    label1 = Label(leftFrame, text="Wielkoryb v.1.7", fg="red", bg=kolor,font=10)
     label2 = Label(leftFrame, text="Wystartuj Bota", fg="cyan", bg=kolor)
     label6 = Label(leftFrame, text="DEBUGGER", fg="cyan", bg="red")
     label3 = Label(leftFrame, text="CheckBox", fg="cyan", bg=kolor)
@@ -681,7 +643,7 @@ def menu():
     label4 = Label(leftFrame, text="PRINTSCREEN", fg="cyan", bg=kolor)
 
     button1 = Button(leftFrame, text="START", fg="red", command=start)
-    button5 = Button(leftFrame, text="DEBUG", fg="red", command=test)
+    button5 = Button(leftFrame, text="DEBUG", fg="red", command=debugger)
     button2 = Button(leftFrame, text="CheckBox", fg="red", command=checkboxy)
     button4 = Button(leftFrame, text="EXIT", fg="red", command=root.quit)
     button3 = Button(leftFrame, text="PrintScreen", fg="red", command=screen)
@@ -698,28 +660,6 @@ def menu():
     button4.grid(row=4, column=1)
     button5.grid(row=5, column=1)
 
-    label6 = Label(middleFrame, text="Jedno okno po lewej ,drugie po prawej stronie.", fg="blue", bg=kolor)
-    label6.pack(side=TOP)
-    label7 = Label(middleFrame,
-                   text="Otwórze eq, na zakładce z robakami / schowaj eq i wyjmij wędkę z wody by ZASTOPOWAC.",
-                   fg="blue", bg=kolor)
-    label7.pack(side=TOP)
-    label8 = Label(middleFrame, text="Nie zasłaniaj okien gry innymi programami!", fg="blue", bg=kolor)
-    label8.pack(side=TOP)
-    label9 = Label(middleFrame,
-                   text="Zaznacz ZAPIS i użyj checkboxa by sprawdzić czy wykrywa ci klienta gry.(tworzy plik PNG)",
-                   fg="blue", bg=kolor)
-    label9.pack(side=TOP)
-    label10 = Label(middleFrame, text="Multiclient oznacza że program obsługuje dokładnie 2 klienty naraz.", fg="blue",
-                    bg=kolor)
-    label10.pack(side=TOP)
-    label11 = Label(middleFrame,
-                    text="Otwieranie rybek wyłącz tylko w przypadku krotkiego łowienia by nie przepełnić eq.",
-                    fg="blue", bg=kolor)
-    label11.pack(side=TOP)
-
-    label11 = Label(rightFrame, text="INFO:", fg="red")
-    label11.pack(side=TOP)
     Label(rightFrame, textvariable=INFO1, fg="red").pack(side=TOP)
     Label(rightFrame, textvariable=INFO2, fg="red").pack(side=TOP)
 
@@ -767,7 +707,7 @@ def checkboxy():
     okno1 = oknostart1[0] + 780, oknostart1[1] + 610
     oknoMaleS1 = oknostart1[0] + 355, oknostart1[1] + 200
     oknoMale1 = oknoMaleS1[0] + 90, oknoMaleS1[1] + 70
-    ekipunek1 = szukajwoknie(oknostart1, okno1, eq)
+    ekipunek1 = szukajwoknie(oknostart1, okno1, sample["eq.png"])
     if (ekipunek1 == 0):
         INFO1.set("nie znaleziono ekwipunku w 1 kliencie")
     else:
@@ -780,7 +720,7 @@ def checkboxy():
         okno2 = oknostart2[0] + 780, oknostart2[1] + 610
         oknoMaleS2 = oknostart2[0] + 355, oknostart2[1] + 200
         oknoMale2 = oknoMaleS2[0] + 90, oknoMaleS2[1] + 70
-        ekipunek2 = szukajwoknie(oknostart2, okno2, eq)
+        ekipunek2 = szukajwoknie(oknostart2, okno2, sample["eq.png"])
         if (ekipunek2 == 0):
             INFO2.set("nie znaleziono ekwipunku w 2 kliencie")
         oknoeqS2 = ekipunek2[0] - 15, ekipunek2[1] - 350
@@ -851,5 +791,8 @@ def usu():
         USUN = 0
 
 
-print("Wielkoryb v1.6")
-main()
+if __name__ == '__main__':
+    print("Wielkoryb v1.8")
+    main()
+
+

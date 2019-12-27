@@ -1,3 +1,4 @@
+#funkcja do szukanie z maską i tolerancją (niepotrzebna)
 def szukajztolerancja(oknostart, okno, szukany):
     box1 = szukany.getbbox()
     img = ImageGrab.grab(bbox=oknostart + okno)
@@ -48,7 +49,7 @@ def szukajztolerancja(oknostart, okno, szukany):
                                         break
     return 0
 
-
+#zwykle szukanie starsza wersja(bez tolerancji , bez pixela maski)
 def szukajwoknie2(oknostart, okno, szukany):
     PIL.ImageGrab.grab(bbox=None)
     img = ImageGrab.grab()
@@ -72,4 +73,43 @@ def szukajwoknie2(oknostart, okno, szukany):
                         else:
                             h = 0
                             break
+    return 0
+
+#Do szukanie z formatu cv2
+def szukajwoknie2(oknostart, okno, szukany):
+    img = pyautogui.screenshot()
+    img = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+    szukanyWys , szukanySzer, channel = szukany.shape
+    wys,szer,channel2=img.shape
+    sum = szukanyWys*szukanySzer
+    for a in range(0, wys):
+        for b in range(0, szer):
+            cordinate2 = a, b
+            cordinate1 = 0, 0
+            if (img[cordinate2].tolist()) == (szukany[cordinate1].tolist()):
+                h = 1
+                a = 0
+                for j in range(0, szukanyWys):
+                    if (a == 1):
+                        break
+                    for i in range(0, szukanySzer):
+                        if (h == sum):
+                            pozycja = cordinate3[1] + oknostart[1],cordinate3[0] + oknostart[0]
+                            return pozycja
+                        else:
+                            cordinate1 = j, i
+                            cordinate3 = j + cordinate2[0], i + cordinate2[1]
+                            if (szukany[cordinate1].tolist() == pustybit):
+                                h = h + 1
+                                continue
+                            else:
+                                if img[cordinate3].tolist() == szukany[cordinate1].tolist():
+                                    h = h + 1
+                                    if (h == sum):
+                                        pozycja =  cordinate3[1] + oknostart[1],cordinate3[0] + oknostart[0]
+                                        return pozycja
+                                else:
+                                    h = 0
+                                    a = 1
+                                    break
     return 0
