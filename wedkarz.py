@@ -9,6 +9,8 @@ from PIL import ImageGrab, ImageDraw, Image
 import cv2
 
 
+
+
 # Grafik do słowników (key to nazwa pliku) przykladowa petla zerujaca słownik:
 #  for key in liczby:
 #       liczby[key] = 0
@@ -43,6 +45,7 @@ pyautogui.FAILSAFE = False
 
 pustybit = (0, 15, 255)
 bialybit = (255, 255, 255)
+bitchatu = (255 , 230, 186)
 
 ########################################################################
 # zmienne Globalne
@@ -271,7 +274,7 @@ def debuguj():
 
 
 def probka(a):
-    (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1) = checkboxy()
+    (oknostart1, okno1, oknoCHATS1, oknoCHAT1, oknoeqS1, oknoeq1, ekipunek1) = checkboxy()
     #Obszar pobierania próbki(można sprawdzić go checkboxem)
     boxS = oknoeqS1[0] + 16, oknoeqS1[1] + 14
     boxE = oknoeqS1[0] + 24, oknoeqS1[1] + 20
@@ -376,7 +379,7 @@ def move(gdzie):
 
 
 def start1():
-    (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekwipunek1) = checkboxy()
+    (oknostart1, okno1, oknoCHATS1, oknoCHAT1, oknoeqS1, oknoeq1, ekwipunek1) = checkboxy()
     sprawdzanie = 10
     global INFO1
     global INFO2
@@ -443,7 +446,7 @@ def start1():
 
 
 def start2():
-    (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1, oknostart2, okno2, oknoMaleS2, oknoMale2,
+    (oknostart1, okno1, oknoCHATS1, oknoCHAT1, oknoeqS1, oknoeq1, ekipunek1, oknostart2, okno2, oknoCHATS2, oknoCHAT2,
      oknoeqS2, oknoeq2, ekwipunek2) = checkboxy()
 
     sprawdzanie = 10
@@ -705,58 +708,66 @@ def checkboxy():
     # OKNO1
     oknostart1 = koordyLoga1
     okno1 = oknostart1[0] + 780, oknostart1[1] + 610
-    oknoMaleS1 = oknostart1[0] + 355, oknostart1[1] + 200
-    oknoMale1 = oknoMaleS1[0] + 90, oknoMaleS1[1] + 70
     ekipunek1 = szukajwoknie(oknostart1, okno1, sample["eq.png"])
+
     if (ekipunek1 == 0):
         INFO1.set("nie znaleziono ekwipunku w 1 kliencie")
     else:
-        oknoeqS1 = ekipunek1[0] - 15, ekipunek1[1] - 350
+        #pozycja wzgledem probki
+        oknoeqS1 = ekipunek1[0] + 15, ekipunek1[1] - 70
+        #rozmiar
         oknoeq1 = oknoeqS1[0] + 165, oknoeqS1[1] + 295
+
+    chat1 = szukajwoknie(oknostart1,okno1,sample["chat.png"])
+    if(chat1 == 0):
+        INFO1.set("nie znaleziono CHATU w 1 kliencie")
+    else:
+        # pozycja wzgledem probki
+        oknoCHATS1 = chat1[0] - 480, chat1[1] - 30
+        # rozmiar
+        oknoCHAT1 = oknoCHATS1[0] + 450, oknoCHATS1[1] + 20
+
 
     # OKNO2
     if (MULTI == 1):
         oknostart2 = koordyLoga2
         okno2 = oknostart2[0] + 780, oknostart2[1] + 610
-        oknoMaleS2 = oknostart2[0] + 355, oknostart2[1] + 200
-        oknoMale2 = oknoMaleS2[0] + 90, oknoMaleS2[1] + 70
         ekipunek2 = szukajwoknie(oknostart2, okno2, sample["eq.png"])
         if (ekipunek2 == 0):
             INFO2.set("nie znaleziono ekwipunku w 2 kliencie")
-        oknoeqS2 = ekipunek2[0] - 15, ekipunek2[1] - 350
+        oknoeqS2 = ekipunek2[0] + 15, ekipunek2[1] - 70
         oknoeq2 = oknoeqS2[0] + 165, oknoeqS2[1] + 295
 
     if ZAPIS == 1:
         img = ImageGrab.grab(bbox=None)
         draw = ImageDraw.Draw(img)
         rysujokno1 = oknostart1 + okno1
-        rysujoknoM1 = oknoMaleS1 + oknoMale1
         rysujeq1 = oknoeqS1 + oknoeq1
+        rysujchat1 = oknoCHATS1 + oknoCHAT1
         boxS = oknoeqS1[0] + 16, oknoeqS1[1] + 14
         boxE = oknoeqS1[0] + 24, oknoeqS1[1] + 20
         rysujDebugg = boxS + boxE
         # rysowanie
         draw.rectangle(rysujokno1, outline=128, width=3)
-        draw.rectangle(rysujoknoM1, outline=(32, 0, 255), width=3)
         draw.rectangle(rysujeq1, outline=(64, 255, 128), width=3)
+        draw.rectangle(rysujchat1, outline=(0, 255, 255), width=3)
         draw.rectangle(rysujDebugg, outline=(128, 255, 96), width=1)
 
         if (MULTI == 1):
             rysujokno2 = oknostart2 + okno2
-            rysujoknoM2 = oknoMaleS2 + oknoMale2
             rysujeq2 = oknoeqS2 + oknoeq2
             # rysowanie
             draw.rectangle(rysujokno2, outline=128, width=3)
-            draw.rectangle(rysujoknoM2, outline=(32, 0, 255), width=3)
             draw.rectangle(rysujeq2, outline=(64, 255, 128), width=3)
         img.save("boxy.png")
         time.sleep(0.5)
 
+    ##DODAC
     if MULTI == 1:
-        return (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1, oknostart2, okno2, oknoMaleS2,
-                oknoMale2, oknoeqS2, oknoeq2, ekipunek2)
+        return (oknostart1, okno1,oknoCHATS1, oknoCHAT1 , oknoeqS1, oknoeq1, ekipunek1, oknostart2, okno2,
+                 oknoeqS2, oknoeq2, ekipunek2)
     if MULTI == 0:
-        return (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1)
+        return (oknostart1, okno1,oknoCHATS1, oknoCHAT1 , oknoeqS1, oknoeq1, ekipunek1)
 
 
 def otw():
