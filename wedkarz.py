@@ -25,20 +25,11 @@ def load_images_toPIL(folder):
             images[filename] = img
     return images
 
-#Wczytaj zdjęcia by operować nimi w cv2(funkcje activeseartch,find_numbers etc)
-def load_images_tocv2(folder):
-    images = {}
-    for filename in os.listdir(folder):
-        img = cv2.imread(os.path.join(folder,filename))
-        if img is not None:
-            print(filename)
-            images[filename] = img
-    return images
 
-liczby = load_images_tocv2('img/liczby/')
+
 ryby = load_images_toPIL('img/ryby/')
 sample = load_images_toPIL('img/samples/')
-czerwoneokno = cv2.imread('img/CV2/okno.png')
+chat = load_images_toPIL('img/chat/')
 
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
@@ -97,7 +88,7 @@ def szukajloga(ktore):
                             break
     return 0
 
-
+#szuka danej bitmapy w danym obszarze i zwraca jej prawy dolny(?) rog jako koordynaty [uwzglednia maske (pusty bit)]
 def szukajwoknie(oknostart, okno, szukany):
     box1 = szukany.getbbox()
     img = ImageGrab.grab(bbox=oknostart + okno)
@@ -108,7 +99,9 @@ def szukajwoknie(oknostart, okno, szukany):
         for b in range(0, wys):
             cordinate2 = a, b
             cordinate1 = 0, 0
+
             if (img.getpixel(cordinate2)) == (szukany.getpixel(cordinate1)):
+                #print(f'perwszy bit zgodny w:    :   {szukany.filename}')
                 h = 1
                 a = 0
                 for j in range(0, box1[2]):
@@ -136,46 +129,31 @@ def szukajwoknie(oknostart, okno, szukany):
                                     break
     return 0
 
-def active_search(sample, image):
-    # pobiera wycinek ze screena i porownuje do duzej probki z folderu
-    method = cv2.TM_SQDIFF_NORMED
-    small_image = sample
-    large_image = image
-    # zastosowanie metody by poznac"granice"
-    result = cv2.matchTemplate(small_image, large_image, method)
-    mn, _, mnLoc, _ = cv2.minMaxLoc(result)
-    # Draw the rectangle:
-    # koordynaty najlepszego znaleziska
-    MPx, MPy = mnLoc
-    # Step 2: Get the size of the template. This is the same size as the match.
-    trows, tcols = small_image.shape[:2]
-    # Przyciecie obrazka do najbardziej dopasowanego
-    large_image = large_image[MPy:MPy + trows, MPx:MPx + tcols]
-    # tylko jezeli blad jest maly(wykryto czerwone okienko)
-    if (mn < 0.25):
-        # zwraca tylko czerwone okno
-        return large_image
-    else:
-        # zwraca 0 co ponowi próbe
-        return 0
 
 
-def which_number(sample, image):
-    # pobiera czerwone okno z liczba i porownuje do malej probki z folderu
-    method = cv2.TM_SQDIFF_NORMED
-    small_image = sample
-    large_image = image
-    # zastosowanie metody by poznac"granice"
-    result = cv2.matchTemplate(small_image, large_image, method)
-    mn, _, mnLoc, _ = cv2.minMaxLoc(result)
-    # zwroc 1 jezeli maly blad(znaleziono)
-    # zwroc 0 jezeli ma szukac dalej
-    # tylko jezeli blad jest maly
-    if (mn < 0.05):
-        print("mn = ", mn)
-        return 0
+
+def czytajCHAT(oknoChatSTART,oknoChatEND):
+    szukaj=szukajwoknie(oknoChatSTART,oknoChatEND,chat["lowienie.png"])
+    if(szukaj==0):
+        print("szukam")
     else:
-        return mn
+        if(szukajwoknie(oknoChatSTART,oknoChatEND,chat["1.png"])!=0):
+            return 1
+        else:
+            if (szukajwoknie(oknoChatSTART, oknoChatEND, chat["2.png"]) != 0):
+                return 2
+            else:
+                if (szukajwoknie(oknoChatSTART, oknoChatEND, chat["3.png"]) != 0):
+                    return 3
+                else:
+                    if (szukajwoknie(oknoChatSTART, oknoChatEND, chat["4.png"]) != 0):
+                        return 4
+                    else:
+                        if (szukajwoknie(oknoChatSTART, oknoChatEND, chat["5.png"]) != 0):
+                            return 5
+    return 0
+
+
 
 
 def main():
@@ -201,9 +179,17 @@ def debugger():
 
 def test2():
     print("test2DEBUG")
-    for key in ryby:
-        print(f'RYBA    :   {key}')
-        print(ryby[key])
+    (oknostart1, okno1, oknoChatSTART, oknoChatEND, oknoeqS1, oknoeq1, ekipunek1) = checkboxy()
+    szukaj = szukajwoknie(oknoChatSTART, oknoChatEND, chat["test.png"])
+    if (szukaj == 0):
+        print("szukam")
+    else:
+        print("ZNALEZIONO GRATUUUUUUUUULACJE")
+        print("ZNALEZIONO GRATUUUUUUUUULACJE")
+        print("ZNALEZIONO GRATUUUUUUUUULACJE")
+        print("ZNALEZIONO GRATUUUUUUUUULACJE")
+        print("ZNALEZIONO GRATUUUUUUUUULACJE")
+        print("ZNALEZIONO GRATUUUUUUUUULACJE")
 
 
 def debuguj():
@@ -259,7 +245,7 @@ def debuguj():
     label7.pack(side=TOP)
     label8 = Label(debug, text="Nie wykryto robaka / wędki (jak up tylko można naprawić debuggerem)", fg="red")
     label8.pack(side=TOP)
-    label9 = Label(debug, text="Rusza myszką ale nie klika - URUCHOM JAKO ADMINISTRATOR", fg="red")
+    label9 = Label(debug, text="Rusza myszką ale nie klika --> URUCHOM JAKO ADMINISTRATOR", fg="red")
     label9.pack(side=TOP)
     label10 = Label(debug,text="Klika na coś inne niż robak(zdebuguj robaka z 1 slota eq)", fg="red")
     label10.pack(side=TOP)
@@ -379,7 +365,7 @@ def move(gdzie):
 
 
 def start1():
-    (oknostart1, okno1, oknoCHATS1, oknoCHAT1, oknoeqS1, oknoeq1, ekwipunek1) = checkboxy()
+    (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekwipunek1) = checkboxy()
     sprawdzanie = 10
     global INFO1
     global INFO2
@@ -446,7 +432,7 @@ def start1():
 
 
 def start2():
-    (oknostart1, okno1, oknoCHATS1, oknoCHAT1, oknoeqS1, oknoeq1, ekipunek1, oknostart2, okno2, oknoCHATS2, oknoCHAT2,
+    (oknostart1, okno1, oknoMaleS1, oknoMale1, oknoeqS1, oknoeq1, ekipunek1, oknostart2, okno2, oknoMaleS2, oknoMale2,
      oknoeqS2, oknoeq2, ekwipunek2) = checkboxy()
 
     sprawdzanie = 10
@@ -560,48 +546,23 @@ def start2():
                     koniec = 1
 
 
-def szukajliczb(k, oknoMale1, oknoMale2):
-    img = ImageGrab.grab(bbox=oknoMale1 + oknoMale2)
-    image = numpy.array(img)
-    # Convert RGB to BGR
-    image = image[:, :, ::-1].copy()
-    probability = []
-    szukane = active_search(czerwoneokno, image)
-    if isinstance(szukane, int):
-        # ilosc  prob przed restartem
-        if MULTI == 1:
-            if (k > 800):
-                return 7
-        # ustalenie po ilu powtórzeniach restart
+def szukajliczb(k, oknoCHAT1, oknoCHAT2):
+
+
+    # ilosc  prob przed restartem
+    if MULTI == 1:
+        if (k > 800):
+            return 7
+    # ustalenie po ilu powtórzeniach restart
         if (k > 1100):
             return 7
         return 0
     else:
-        print("wyskoczylo okno")
-        i = 0
+        wynik=czytajCHAT(oknoCHAT1,oknoCHAT2)
 
-        szukaneWys=szukane.shape[0]
-        for key in liczby:
 
-            # zabezpieczenie wysokości ( dobra strone warunek? xD)
-            if szukaneWys < liczby[key].shape[0]:
-                print("pobrano za mala probke by uniknac bledu 'znajduje' 4")
-                return 4
 
-            # print("sprawdzam liczbe o indeksie",i)
-            probability.append(which_number(liczby[key], szukane))
-            if (probability[i] == 0):
-                print("znaleziono", key)
-                return (i + 1)
-            i = i + 1
-            # print("szansa",i," = ",probability[i])
-
-        print("nie rozpoznano liczby w oknie, utworzono zrzut wykrycia")
-        cv2.imwrite("zrzut.png", szukane)
-        # zwraca indeks przykladu ktory byl najpodobniejszy do sprawdzanego
-        print("droga eliminacji otrzumano liczbe", probability.index(min(probability)) + 1)
-        return probability.index(min(probability)) + 1
-    return 0
+    return wynik
 
 
 def otwieranie(oknoeq1, oknoeq2, sprawdzanie):
