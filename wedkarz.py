@@ -115,9 +115,16 @@ def szukajwoknie(oknostart, okno, szukany):
                             cordinate1 = j, i
                             cordinate3 = j + cordinate2[0], i + cordinate2[1]
                             if (szukany.getpixel(cordinate1) == pustybit):
+                                #print("pusty")
                                 h = h + 1
                                 continue
                             else:
+                                #print("zgodny",szukany.filename)
+                                if cordinate3[0] >= szer or cordinate3[1] >= wys:
+                                    h = 0
+                                    a = 1
+                                    #print("POZA INDEKSEM")
+                                    break
                                 if img.getpixel(cordinate3) == szukany.getpixel(cordinate1):
                                     h = h + 1
                                     if (h == sum):
@@ -137,6 +144,7 @@ def czytajCHAT(oknoChatSTART,oknoChatEND):
     if(szukaj==0):
         print("szukam")
     else:
+        print("ZNALEZIONO LOWIENIE")
         if(szukajwoknie(oknoChatSTART,oknoChatEND,chat["1.png"])!=0):
             return 1
         else:
