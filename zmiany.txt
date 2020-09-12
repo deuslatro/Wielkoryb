@@ -1,17 +1,23 @@
-0. Działanie bota  <in progress 60%>
-*0.1 porównanie wyników jeżeli niejednoznaczne i wybranie najbliższego <done>
-*0.2 fix wyszukiwania robaka <done>
-*0.3 zabezpieczenie wysokości(czerwone okno) <done>
-*0.4 nowy system usuwania śmieci
+wersja 2.0
+Bot działa
+*narazie 1 klient
+*debugger nie dzial jak powinien
+*malo optymalny
 
-1. wspólna tablica na wszyskie obrazki ryb<done>
-*1.1 robienie tablicy z folderu <done>
 
-2. uprzątnięcie kodu <done>
-*2.1 Wywalenie większej iości zbędnego kodu <done>
 
-3. Sprawdzanie Rozdziałki (wypisywanie ją do okienka) <soon>
-*3.1 (ładniejsze i lepsze GUI)
-*3.2 Aktywne STOP w GUI/Hotkeye które uda się zmienić w .exe
 
-4.Multiclient na 4 clienty?
+
+
+
+
+
+TO DO:
+fix debuggera
+naprawa otwierania rybek
+usuwanie smieci?(o ile sa)
+zmiana designu(wiecej opcji do configu)
+zapis configu
+multiclient (4?) - optymalizacja?
+
+
