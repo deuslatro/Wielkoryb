@@ -458,3 +458,22 @@ def screen():
     PIL.ImageGrab.grab(bbox=None)
     img = ImageGrab.grab()
     img.save("screen.png")
+
+def debugger():
+    global DEBUGGER
+    global debug
+    global MULTI
+    if DEBUGGER == 0:
+        if MULTI == 1:
+            print("wylacz MULTIKLIENTA by debugowac")
+        DEBUGGER = 1
+        debug.deiconify()
+        print("DEBUG MODE ON")
+    else:
+        if DEBUGGER == 1:
+            DEBUGGER = 0
+            debug.withdraw()
+    DEBUGGER = 0
+    debug.protocol('WM_DELETE_WINDOW', debug.withdraw)
+    debug.withdraw()
+    debug.mainloop()

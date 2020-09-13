@@ -1,23 +1,16 @@
-wersja 2.0
-Bot działa
-*narazie 1 klient
-*debugger nie dzial jak powinien
-*malo optymalny
-
-
-
-
-
-
-
-
+wersja 3.2
+Bot dziala lecz topornie,
+Gui wykonane w 90%,
+Opcje oraz Config sprawne(poza trybem turbo nie wiadomo czy potrzebny)
+obsluga 2 rozdzielczosci (4 klienty tylko na mniejszczej)
 
 TO DO:
 fix debuggera
 naprawa otwierania rybek
-usuwanie smieci?(o ile sa)
-zmiana designu(wiecej opcji do configu)
-zapis configu
+naprawa usuwanie smieci
+config opoznienia 
 multiclient (4?) - optymalizacja?
+opcje fabryczne
+
 
 
