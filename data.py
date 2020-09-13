@@ -1,6 +1,7 @@
+import os
 import sys
+from PIL import ImageGrab, ImageDraw, Image
 from enum import Enum
-
 # Bazowy config
 DATA = {
 	"Otwieraj_Ryby": 0,
@@ -15,6 +16,10 @@ DATA = {
 
 MAX_CLIENTS = 4
 
+STATUS_1 = "OFF"
+STATUS_2 = "OFF"
+STATUS_3 = "OFF"
+STATUS_4 = "OFF"
 
 def read_config():
 	configRead = open('config.txt', 'r')
@@ -35,3 +40,13 @@ def write_config():
 
 
 read_config()
+
+# Wczytaj zdjęcia by operować nimi biblioteką PIL(funkcja szukajwoknie)
+def load_images_toPIL(folder):
+    images = {}
+    for filename in os.listdir(folder):
+        img = Image.open(os.path.join(folder, filename))
+        if img is not None:
+            #print(filename)
+            images[filename] = img
+    return images

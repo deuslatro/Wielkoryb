@@ -8,41 +8,31 @@ from PIL import ImageGrab, ImageDraw, Image
 from enum import Enum
 from queue import Queue
 import data
+import okno
 
 
 
-# Wczytaj zdjęcia by operować nimi biblioteką PIL(funkcja szukajwoknie)
-def load_images_toPIL(folder):
-    images = {}
-    for filename in os.listdir(folder):
-        img = Image.open(os.path.join(folder, filename))
-        if img is not None:
-            #print(filename)
-            images[filename] = img
-    return images
 
-
-ryby = load_images_toPIL('img/ryby/')
-sample = load_images_toPIL('img/samples/')
-chat = load_images_toPIL('img/chat/')
-queue = Queue()
 
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
-
-pustybit = (0, 15, 255)
-
 #GLOBAL VARIABLES
 ########################################################################
+pustybit = (0, 15, 255)#Wartosc bita "maski"
 RESTART_COUNT = 0 #licznik ile razy boty łącznie zostaly zrestartowane podczas aktualneej sesji
 THREAD = 1 # Zmienna do konczenia wszystkich watkow (STOP botow)
 
-OPEN = data.DATA.get("Otwieraj_Ryby")
-PRINTSCREEN = data.DATA.get("Zapis_Screenow")
-REMOVE_TRASH = data.DATA.get("Usuwaj_Smieci")
-RESOLUTION = data.DATA.get("Rozdzielczosc_Klienta") #1=640:360 / 800:600 rozdzielczość klienta
+OPEN = int(data.DATA.get("Otwieraj_Ryby"))
+PRINTSCREEN = int(data.DATA.get("Zapis_Screenow"))
+REMOVE_TRASH = int(data.DATA.get("Usuwaj_Smieci"))
+RESOLUTION = int(data.DATA.get("Rozdzielczosc_Klienta")) #1=640:360 / 800:600 rozdzielczość klienta
 
+#wczytanie grafik
+ryby = data.load_images_toPIL('img/ryby/')
+sample = data.load_images_toPIL('img/samples/')
+chat = data.load_images_toPIL('img/chat/')
 
+queue = Queue()
 
 class BotPosition(Enum):
     TOP_LEFT = 1
@@ -58,7 +48,7 @@ def find_logo(botPosition):
     screenSize = [0, 0, img.size[0], img.size[1]]
     if botPosition == 1:
         screenSize[2] = int(img.size[0] / 2)
-        screenSize[1] = int(img.size[1] / 2)
+        screenSize[3] = int(img.size[1] / 2)
     elif botPosition == 2:
         screenSize[0] = int((img.size[0] / 2) + 1)
         screenSize[3] = int((img.size[1] / 2) + 1)
@@ -66,9 +56,10 @@ def find_logo(botPosition):
         screenSize[2] = int(img.size[0] / 2)
         screenSize[1] = int(img.size[1] / 2)
     elif botPosition == 4:
-        screenSize[0] = int((img.size[0] / 2) + 1)
-        screenSize[3] = int((img.size[1] / 2) + 1)
+        screenSize[1] = int((img.size[0] / 2) + 1)
+        screenSize[0] = int((img.size[1] / 2) + 1)
     h = 0
+    print(f"dla watku {threading.current_thread().name}  obszar poszukiwań: szerokosc: {screenSize[0]} {screenSize[2]} wysokosc: {screenSize[1]} {screenSize[3]}")
     for a in range(screenSize[0], (screenSize[2])):
         for b in range(screenSize[1], (screenSize[3])):
             cordinate2 = a, b
@@ -141,12 +132,11 @@ def szukajwoknie(oknostart, okno, szukany):
 
 def czytajCHAT(oknoChatSTART, oknoChatEND):
     szukaj = szukajwoknie(oknoChatSTART, oknoChatEND, chat["lowienie.png"])
-    if (szukaj == 0):
-        print("szukam")
-    else:
-        print("ZNALEZIONO LOWIENIE")
+    if (szukaj != 0):
+        #print("ZNALEZIONO LOWIENIE")
         for x in range(1,6):
             if szukajwoknie(oknoChatSTART, oknoChatEND, chat[f"{x}.png"]) != 0:
+                print(f"Znaleziono {x} na chacie")
                 return x
     return 0
 
@@ -167,10 +157,11 @@ def start():
     print("NAZWA BOTA: ",threading.current_thread().name)
     THREAD = 1
     start1()
-    print("Koniec")
+    print("Koniec dzialania bota",threading.current_thread().name)
 
 def startNewBots(numberOfBots:int):
     for botNumber in range(1,numberOfBots+1):
+        time.sleep(0.4)
         thread = threading.Thread(target=start,name=BotPosition(botNumber).name)
         thread.start()
 
@@ -179,42 +170,7 @@ def startNewBots(numberOfBots:int):
 
 
 def usun(oknostart, okno, oknoeq1, oknoeq2):
-    global INFO1
-    global INFO2
-    first = szukajwoknie(oknostart, okno, sample["kosz.png"])
-    if first == 0:
-        time.sleep(5)
-        return 0
-    move(first)
-    second = szukajwoknie(oknostart, okno, sample["usun.png"])
-    if second == 0:
-        time.sleep(5)
-        return 0
-    border1 = second[0] - 50, second[1] - 215
-    border2 = border1[0] + 170, border1[1] + 200
-
-    for i in range(8):  # 0 - 7
-        item1 = szukajwoknie(oknoeq1, oknoeq2, sample["pierscien.png"])
-        if (item1 != 0):
-            slot = szukajwoknie(border1, border2, sample["puste.png"])
-            pyautogui.moveTo(item1[0], item1[1], 0.2)
-            time.sleep(0.2)
-            pyautogui.dragTo(slot[0], slot[1], 0.3)
-
-        item2 = szukajwoknie(oknoeq1, oknoeq2, sample["plaszcz.png"])
-        if (item2 != 0):
-            print("plaszcz")
-            slot = szukajwoknie(border1, border2, sample["puste.png"])
-            pyautogui.moveTo(item2[0], item2[1], 0.2)
-            time.sleep(0.2)
-            pyautogui.dragTo(slot[0], slot[1], 0.3)
-
-        if (item1 == 0):
-            if (item2 == 0):
-                move(first)
-                return 1
-        move(second)
-    move(first)
+    print("brak usuwania")
 
 
 def move(gdzie):
@@ -231,18 +187,16 @@ def start1():
     global RESTART_COUNT
     koordyrobaka1 = szukajwoknie(oknostart1, okno1, sample["robak.png"])
     if (koordyrobaka1 == 0):
-        print("Brak robaka")
+        print(f"Brak robaka watek {threading.current_thread().name}",)
         return 0
     # szukaj lowienia
     koordylowienia1 = szukajwoknie(oknostart1, okno1, sample["low.png"])
     if (koordylowienia1 == 0):
-        print("brak lowienia")
+        print(f"Brak lowienia watek {threading.current_thread().name}")
         return 0
-    print("ZNALEZIONO ROBAKA I LOWIENIE")
+    print(f"ZNALEZIONO ROBAKA I LOWIENIE W WATKU {threading.current_thread().name}")
     while THREAD == 1:
-        r1 = random.randint(1, 3) / 100
-        r2 = random.randint(1, 3) / 100
-        time.sleep(2)
+        time.sleep(3)
         pyautogui.moveTo(koordyrobaka1[0], koordyrobaka1[1], 0.1)
         time.sleep(0.05)
         pyautogui.click(button='right')
@@ -276,7 +230,7 @@ def start1():
 
 def szukajliczb(k, oknoCHAT1, oknoCHAT2):
     # ilosc  prob przed restartem
-    if (k > 800):
+    if (k > 400):
         return 7
     else:
         wynik = czytajCHAT(oknoCHAT1, oknoCHAT2)
@@ -325,7 +279,7 @@ def checkboxy():
 
     koordyLoga1 = find_logo(threadValue)
     if koordyLoga1 == 0:
-        print("BRAK LOGA W WATKU ",threading.current_thread().name)
+        print(f"BRAK LOGA W WATKU {threading.current_thread().name}")
 
 
     # OKNO1
@@ -337,7 +291,8 @@ def checkboxy():
     ekipunek1 = szukajwoknie(oknostart1, okno1, sample["eq.png"])
 
     if (ekipunek1 == 0):
-        print("nie znaleziono ekwipunku w watku ",threading.current_thread().name)
+
+        print(f"nie znaleziono ekwipunku w watku {threading.current_thread().name}")
     else:
         # pozycja wzgledem probki
         oknoeqS1 = ekipunek1[0] + 15, ekipunek1[1] - 70
@@ -346,7 +301,7 @@ def checkboxy():
 
     chat1 = szukajwoknie(oknostart1, okno1, sample["chat.png"])
     if (chat1 == 0):
-        print("nie znaleziono CHATU w watku",threading.current_thread().name)
+        print(f"nie znaleziono CHATU w watku {threading.current_thread().name}")
     else:
         # pozycja wzgledem probki
         oknoCHATS1 = chat1[0] - 480, chat1[1] - 30
@@ -375,3 +330,4 @@ def checkboxy():
     return (oknostart1, okno1, oknoCHATS1, oknoCHAT1, oknoeqS1, oknoeq1, ekipunek1)
 
 
+data.STATUS_1 = "ERR(LOGO)"

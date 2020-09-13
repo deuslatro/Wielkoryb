@@ -1,4 +1,6 @@
 import sys
+
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow
 from UI_okno import Ui_MainWindow
 import wedkarz
@@ -31,7 +33,24 @@ class MainWindow:
 		self.ui.checkBot4.clicked.connect(self.pressCheckBot4)
 		self.ui.checkDebug1.clicked.connect(self.pressCheckDebug1)
 		self.checkBoxStatus()
+		self.timer = QtCore.QTimer()
+		self.timer.timeout.connect(self.status1)
+		self.timer.start(1000)
+		#self.ui.labelBot1.setText(data.STATUS_1)
+		#self.ui.labelBot1.update()
 
+	def status1(self):
+		self.ui.labelBot7.setText(data.STATUS_1)
+		self.ui.labelBot7.update()
+	def status2(self,status):
+		self.ui.labelBot8.setText(data.STATUS_2)
+		self.ui.labelBot8.update()
+	def status3(self,status):
+		self.ui.labelBot9.setText(data.STATUS_3)
+		self.ui.labelBot9.update()
+	def status4(self,status):
+		self.ui.labelBot10.setText(data.STATUS_4)
+		self.ui.labelBot10.update()
 
 	def show(self):
 		self.main_win.show()
@@ -85,6 +104,13 @@ class MainWindow:
 		wedkarz.stop()
 		self.ui.pushButton1.setDisabled(False)
 		self.ui.pushButton2.setDisabled(True)
+		self.ui.pushButton_opcje.setDisabled(False)
+		self.ui.checkBot1.setDisabled(False)
+		self.ui.checkBot2.setDisabled(False)
+		self.ui.checkBot3.setDisabled(False)
+		self.ui.checkBot4.setDisabled(False)
+		self.ui.checkRes1.setDisabled(False)
+		self.ui.checkRes2.setDisabled(False)
 
 	#Naciesniecie zmiany rozdzialki
 	def pressCheckRes1(self):
@@ -148,6 +174,13 @@ class MainWindow:
 		wedkarz.startNewBots(self.coutCheckedBots())
 		self.ui.pushButton1.setDisabled(True)
 		self.ui.pushButton2.setDisabled(False)
+		self.ui.pushButton_opcje.setDisabled(True)
+		self.ui.checkBot1.setDisabled(True)
+		self.ui.checkBot2.setDisabled(True)
+		self.ui.checkBot3.setDisabled(True)
+		self.ui.checkBot4.setDisabled(True)
+		self.ui.checkRes1.setDisabled(True)
+		self.ui.checkRes2.setDisabled(True)
 
 	def checkBoxStatus(self):
 		if data.DATA.get("Rozdzielczosc_Klienta") == '1':

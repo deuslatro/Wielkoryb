@@ -8,7 +8,7 @@ TO DO:
 fix debuggera
 naprawa otwierania rybek
 naprawa usuwanie smieci
-config opoznienia 
+config opoznienia
 multiclient (4?) - optymalizacja?
 opcje fabryczne
 
