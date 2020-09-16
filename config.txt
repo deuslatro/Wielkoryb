@@ -7,7 +7,7 @@ Klient_1 1
 Klient_2 1
 Klient_3 1
 Klient_4 1
-Fish_Delay 20
+Fish_Delay 25
 Space_Delay 20
 until_Restart 2400
 * 1=640:360 / 0=800:600 rozdzielczosc klienta

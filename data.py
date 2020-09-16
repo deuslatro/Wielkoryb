@@ -20,6 +20,9 @@ DATA = {
 
 MAX_CLIENTS = 4
 
+#aktualizuje okno bota do zamkniecia watkow
+
+
 
 STATUS = []
 STATUS.append("OFF")

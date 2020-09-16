@@ -51,6 +51,9 @@ class MainWindow:
 		self.ui.labelBot9.update()
 		self.ui.labelBot10.setText(data.STATUS[3])
 		self.ui.labelBot10.update()
+		if all(flag == "OFF" for (flag) in data.STATUS):
+			self.ui.pushButton1.setDisabled(False)
+			self.ui.pushButton2.setDisabled(True)
 
 
 	def show(self):
@@ -111,6 +114,7 @@ class MainWindow:
 		return [self.ui.checkBot1, self.ui.checkBot2, self.ui.checkBot3, self.ui.checkBot4]
 
 	def stopBots(self):
+		data.THREAD_STOP = 1
 		wedkarz.stop()
 		self.ui.pushButton1.setDisabled(False)
 		self.ui.pushButton2.setDisabled(True)
@@ -172,7 +176,9 @@ class MainWindow:
 		return numberOfBots
 
 	def startBots(self):
+		data.STATUS[0] = "LOAD"
 		self.checkResolution()
+		data.THREAD_STOP = 0
 		wedkarz.startNewBots(self.coutCheckedBots())
 		self.ui.pushButton1.setDisabled(True)
 		self.ui.pushButton2.setDisabled(False)
@@ -183,6 +189,7 @@ class MainWindow:
 		self.ui.checkBot4.setDisabled(True)
 		self.ui.checkRes1.setDisabled(True)
 		self.ui.checkRes2.setDisabled(True)
+
 
 	def checkBoxStatus(self):
 		if data.DATA.get("Rozdzielczosc_Klienta") == '1':

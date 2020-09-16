@@ -7,9 +7,8 @@ import numpy as np
 import cv2
 from PIL import ImageGrab, ImageDraw, Image
 from enum import Enum
-
 import d3dshot
-
+import matplotlib.pyplot as plt
 import data
 
 pyautogui.PAUSE = 0
@@ -163,7 +162,8 @@ def numpyFinder(sectorXY, sectorXY2, sample):
 	img[np.all(img != color_filter_20, axis=-1)] = color_filter_30
 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)
 	mn, _, mnLoc, _ = cv2.minMaxLoc(result)
-	#print("Podobienstwo :")
+	print("Podobienstwo :",mn,threading.current_thread().name)
+	#img=[]
 	if mn == 0:
 		return (1, img)
 	return (0, 0)
@@ -344,6 +344,7 @@ def otwieranie(oknoeq1, oknoeq2, open_Counter):
 
 def threads_stop(ActualThreadNumber):
 	time.sleep(4)
+	data.THREAD_STOP = 1
 	data.STATUS[ActualThreadNumber - 1] = "OFF"
 
 
@@ -387,9 +388,9 @@ def checkboxy(ActualThreadNumber):
 	else:
 		print("znaleziono CHAT")
 		# pozycja wzgledem probki protokołu chatu[ikony wyślij wiadomość]
-		oknoCHATS1 = chat[0] - 360, chat[1] - 30
+		oknoCHATS1 = chat[0] - 355, chat[1] - 28
 		# rozmiar
-		oknoCHAT1 = oknoCHATS1[0] + 75, oknoCHATS1[1] + 18
+		oknoCHAT1 = oknoCHATS1[0] + 60, oknoCHATS1[1] + 14
 
 	if PRINTSCREEN == 1:
 		img = ImageGrab.grab(bbox=None)
