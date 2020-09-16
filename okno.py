@@ -3,9 +3,10 @@ import sys
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow
 from UI_okno import Ui_MainWindow
+import data
 import wedkarz
 import threading
-import data
+
 
 
 class MainWindow:
@@ -33,24 +34,24 @@ class MainWindow:
 		self.ui.checkBot4.clicked.connect(self.pressCheckBot4)
 		self.ui.checkDebug1.clicked.connect(self.pressCheckDebug1)
 		self.checkBoxStatus()
+		self.ui.checkOpcje1.setDisabled(True)
+		self.ui.checkOpcje2.setDisabled(True)
+		self.ui.checkOpcje3.setDisabled(True)
+		self.ui.buttonDebug1.clicked.connect(self.pressDebug1)
 		self.timer = QtCore.QTimer()
-		self.timer.timeout.connect(self.status1)
+		self.timer.timeout.connect(self.botsStatus)
 		self.timer.start(1000)
-		#self.ui.labelBot1.setText(data.STATUS_1)
-		#self.ui.labelBot1.update()
 
-	def status1(self):
-		self.ui.labelBot7.setText(data.STATUS_1)
+	def botsStatus(self):
+		self.ui.labelBot7.setText(data.STATUS[0])
 		self.ui.labelBot7.update()
-	def status2(self,status):
-		self.ui.labelBot8.setText(data.STATUS_2)
+		self.ui.labelBot8.setText(data.STATUS[1])
 		self.ui.labelBot8.update()
-	def status3(self,status):
-		self.ui.labelBot9.setText(data.STATUS_3)
+		self.ui.labelBot9.setText(data.STATUS[2])
 		self.ui.labelBot9.update()
-	def status4(self,status):
-		self.ui.labelBot10.setText(data.STATUS_4)
+		self.ui.labelBot10.setText(data.STATUS[3])
 		self.ui.labelBot10.update()
+
 
 	def show(self):
 		self.main_win.show()
@@ -69,6 +70,15 @@ class MainWindow:
 
 	def goDebbug(self):
 		self.ui.stackedWidget.setCurrentWidget(self.ui.debug)
+
+	def pressDebug1(self):
+		sample=self.ui.comboDebug.itemText(self.ui.comboDebug.currentIndex())
+		if sample == "lowienie":
+			wedkarz.probka(wedkarz.sample["low.png"])
+		elif sample == "przyneta":
+			wedkarz.probka(wedkarz.sample["robak.png"])
+		else:
+			wedkarz.probka(wedkarz.ryby[f"{sample}.png"])
 
 	def pressCheckBot1(self):
 		if self.ui.checkBot1.isChecked():
@@ -117,21 +127,13 @@ class MainWindow:
 		data.DATA["Rozdzielczosc_Klienta"] = 1
 		self.ui.checkRes1.setChecked(True)
 		self.ui.checkRes2.setChecked(False)
-		self.ui.checkBot3.setDisabled(False)
-		self.ui.checkBot4.setDisabled(False)
+
 
 	def pressCheckRes2(self):
 		data.DATA["Rozdzielczosc_Klienta"] = 0
 		self.ui.checkRes2.setChecked(True)
 		self.ui.checkRes1.setChecked(False)
-		self.ui.checkBot3.setChecked(False)
-		self.ui.checkBot4.setChecked(False)
-		self.ui.checkBot3.setDisabled(True)
-		self.ui.checkBot4.setDisabled(True)
-		data.DATA["Klient_3"] = 0
-		data.DATA["Klient_4"] = 0
-		self.ui.checkBot3.update()
-		self.ui.checkBot4.update()
+
 
 	def pressCheckDebug1(self):
 		if self.ui.checkDebug1.isChecked():
@@ -205,3 +207,5 @@ class MainWindow:
 			self.ui.checkBot3.setChecked(True)
 		if data.DATA.get("Klient_4") == '1':
 			self.ui.checkBot4.setChecked(True)
+		if data.DATA.get("Zapis_Screenow") == '1':
+			self.ui.checkDebug1.setChecked(True)
