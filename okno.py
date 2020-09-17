@@ -175,7 +175,8 @@ class MainWindow:
 		return numberOfBots
 
 	def startBots(self):
-		data.STATUS[0] = "LOAD"
+		for i in range(0,self.coutCheckedBots()):
+			data.STATUS[i] = "LOAD"
 		self.checkResolution()
 		data.THREAD_STOP = 0
 		wedkarz.startNewBots(self.coutCheckedBots())
