@@ -1,0 +1,2 @@
+- Nie wywala BOTA w debugerze jak nie ma chatu,eq
+- 

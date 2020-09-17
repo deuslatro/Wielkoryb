@@ -1,0 +1,22 @@
+1. BOT`a  uruchom jako Administrator
+2. BOT zczytuje informacje z ekranu aby działał wymaga by widoczne były:
+- logo  gry (lewy góry róg okna lkienta metina)
+- eq (ikonka Dopalacze z posku po lewej stronie eq)
+- chat (przycisk wysyłania wiadomości w protokole wiadomości)
+- przyneta( umieszczona moze byc gdzikolwiek w oknie gry)
+- lowienie (ikona lowiania, umieszczona gdziekolwiek w oknie gry)
+*Jezeli czegos bot nie widzi powinien zasygnalizowac to zmiana statusu odpowiedniego bota
+wtedy nalezy zastopowac bota (w przypadku robaka / badz lowienia zrestartuje sie sam po 10 s)
+3.Aktualną konfiguracje (ilosc klientow rozdzialke i inne opcje) mozna zapisac w configu przyciskiem ZAPISZ OPCJE
+4. bot obsługuje do 2 klientów w rozdzielczosci 800x600 badz 4 w 640x360
+!!! UWAGA niezależnie ile jest klientów BOT zawsze szuka ich LOGA w podanej kolejności
+lewy górny > prawy górny > lewy dolny > prawy dolny
+screen rozmieszczenie.png zawiera grafike pomagająca zrozumieć
+5.W pliku config.txt mozna zmieniac opoznienia jezeli bot nie wyrabia/jest za szybki dal  klienta metina.
+
+FAQ:
+- Nie wyszukuje mi loga(ERR(LOGO)). -> Sprawdz czy twoje logo znajduje się w odpowiednim miejscu (rozmieszczenie.png) jeżeli wciąż są problemy ręcznie podmień próbkę(plik img/samples/logo.png) pamiętaj by zachować zbliżoną wielkość oraz pozycję do orginału.
+- Nie wyszukuje mi eq(ERR(EQ), chatu(ERR(CHAT) -> Sprawdz czy niczym nie są zasłonięte (przycisk chatu czesto jest zasłonięte eq, natomiast przycisk dopalaczy oknem chatu) jeżeli wciąż problemy podmień próbkę ręcznie.
+- Nie wyszukuje mi robaka/lowienia (ERR(ROBAK),ERR(WEDKA) -> użyj debuggera. w opcjach wejdz w debugger, wybierz przyneta/lowienie i kliknij PODMIEŃ
+- Wywala bota po kliknieciu podmien w debugerze -> upewnij się że LOGO,EQ oraz Chat sa widoczne podczes pobierania próbki.
+- Bot zarzuca ale nie łowi(nie znajduje liczb na chacie) -> protokół chatu musi być najberdziej jak to możliwe zwężony(najmniejsza szerokosc)
