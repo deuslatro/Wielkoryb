@@ -1,11 +1,10 @@
-import sys
-
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow
 from UI_okno import Ui_MainWindow
 import data
 import wedkarz
 import threading
+import mouse
 
 
 
@@ -180,6 +179,8 @@ class MainWindow:
 		self.checkResolution()
 		data.THREAD_STOP = 0
 		wedkarz.startNewBots(self.coutCheckedBots())
+		thread = threading.Thread(target=mouse.queueOperator, name='mouse',daemon=True)
+		thread.start()
 		self.ui.pushButton1.setDisabled(True)
 		self.ui.pushButton2.setDisabled(False)
 		self.ui.pushButton_opcje.setDisabled(True)

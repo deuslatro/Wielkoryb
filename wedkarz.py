@@ -1,5 +1,3 @@
-import os
-import random
 import time
 import threading
 import pyautogui
@@ -8,8 +6,9 @@ import cv2
 from PIL import ImageGrab, ImageDraw, Image
 from enum import Enum
 import d3dshot
-import matplotlib.pyplot as plt
 import data
+import mouse
+#from matplotlib import pyplot as plt
 
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
@@ -162,9 +161,12 @@ def numpyFinder(sectorXY, sectorXY2, sample):
 	img[np.all(img != color_filter_20, axis=-1)] = color_filter_30
 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)
 	mn, _, mnLoc, _ = cv2.minMaxLoc(result)
-	print("Podobienstwo :",mn,threading.current_thread().name)
-	#img=[]
+	# print("Podobienstwo :", mn, threading.current_thread().name)
+
 	if mn == 0:
+		#nie dziala wielowatkowo (tylko do sprawdzania)
+		#plt.imshow(img)
+		#plt.show()
 		return (1, img)
 	return (0, 0)
 
@@ -172,6 +174,7 @@ def numpyFinder(sectorXY, sectorXY2, sample):
 def numpyWhichNumber(sample, img):
 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)
 	mn, _, mnLoc, _ = cv2.minMaxLoc(result)
+	# print("Podobienstwo :", mn, threading.current_thread().name)
 	if mn == 0:
 		return 1
 	else:
@@ -181,19 +184,11 @@ def numpyWhichNumber(sample, img):
 def czytajCHAT(oknoChatSTART, oknoChatEND):
 	(szukaj, img) = numpyFinder(oknoChatSTART, oknoChatEND, numpyData.get('lowienie.npy'))
 	if (szukaj != 0):
-		print("ZNALEZIONO LOWIENIE")
 		for x in range(1, 6):
 			if numpyWhichNumber(sample=numpyData.get(f'{x}.npy'), img=img) != 0:
-				print(f"Znaleziono {x} na Chacie", )
+				print(f"Znaleziono {x} na Chacie ", threading.current_thread().name)
 				return x
 	return 0
-
-
-def spacje(ilosc, koordylowienia):
-	pyautogui.moveTo(koordylowienia[0], koordylowienia[1], 0.1)
-	for s in range(0, ilosc):
-		time.sleep(space_Delay)
-		pyautogui.click(button='right')
 
 
 def whichThread():
@@ -224,18 +219,12 @@ def start():
 def startNewBots(numberOfBots: int):
 	for botNumber in range(1, numberOfBots + 1):
 		time.sleep(0.8)
-		thread = threading.Thread(target=start, name=BotPosition(botNumber).name)
+		thread = threading.Thread(target=start, name=BotPosition(botNumber).name, daemon=True)
 		thread.start()
 
 
 def usun(oknostart, okno, oknoeq1, oknoeq2):
 	print("brak usuwania")
-
-
-def move(gdzie):
-	pyautogui.moveTo(gdzie[0], gdzie[1], 0.2)
-	time.sleep(0.3)
-	pyautogui.click()
 
 
 def initialization(ActualThreadNumber):
@@ -245,7 +234,6 @@ def initialization(ActualThreadNumber):
 		print(f"Brak Loga badz eq/chatu {BotPosition(ActualThreadNumber).name}")
 		return 0
 
-	open_Counter = 10
 	global INFO1
 	global INFO2
 	print("ilosc restartow: ", RESTART_COUNT)
@@ -255,7 +243,6 @@ def initialization(ActualThreadNumber):
 		data.STATUS[ActualThreadNumber - 1] = "ERR(ROBAK)"
 		time.sleep(10)
 		initialization(ActualThreadNumber)
-
 
 	# szukaj lowienia
 	wedka = szukajwoknie(oknostart1, okno1, sample["low.png"])
@@ -267,25 +254,19 @@ def initialization(ActualThreadNumber):
 
 	print(f"ZNALEZIONO ROBAKA I LOWIENIE W WATKU {BotPosition(ActualThreadNumber).name}")
 	data.STATUS[ActualThreadNumber - 1] = "START"
-	fishing(ActualThreadNumber, open_Counter, koordyrobaka1, wedka, okno1, oknostart1,
-	        oknoMale1, oknoMaleS1,
-	        oknoeq1, oknoeqS1)
+	fishing(ActualThreadNumber, koordyrobaka1, wedka, oknoMaleS1, oknoMale1)
 
 
-def fishing(ActualThreadNumber, open_Counter, koordyrobaka1, koordylowienia1, okno1, oknostart1,
-            oknoMale1, oknoMaleS1,
-            oknoeq1, oknoeqS1):
+def fishing(ActualThreadNumber, koordyrobaka1, koordylowienia1, oknoMaleS1, oknoMale1):
 	global RESTART_COUNT
 	while THREAD == 1:
-		time.sleep(3)
+		time.sleep(4)
 		data.STATUS[ActualThreadNumber - 1] = "ŁOWIE"
-		pyautogui.moveTo(koordyrobaka1[0], koordyrobaka1[1], fish_Delay)
-		time.sleep(fish_Delay)
-		pyautogui.click(button='right')
-		pyautogui.moveTo(koordylowienia1[0], koordylowienia1[1], fish_Delay)
-		time.sleep(fish_Delay)
-		pyautogui.click(button='right')
-		time.sleep(7)
+		mouse.q.put(('move', koordyrobaka1[0], koordyrobaka1[1], fish_Delay))
+
+		mouse.q.put(('move', koordylowienia1[0], koordylowienia1[1], fish_Delay))
+
+		time.sleep(8)
 		fish_Loop = 0
 		restart_Counter = 0
 		while (fish_Loop == 0):
@@ -300,18 +281,9 @@ def fishing(ActualThreadNumber, open_Counter, koordyrobaka1, koordylowienia1, ok
 				time.sleep(5)
 				initialization(ActualThreadNumber)
 			if fish_Loop > 0:
-				open_Counter = open_Counter + 1
-				data.STATUS[ActualThreadNumber - 1] = "WYŁAWIAM"
-				spacje(fish_Loop, koordylowienia1)
+				data.STATUS[ActualThreadNumber - 1] = f"FOUND {fish_Loop}"
+				mouse.q.put(('click', koordylowienia1[0], koordylowienia1[1], fish_Loop, space_Delay))
 				time.sleep(5.5)
-				if OPEN == 1:
-					data.STATUS[ActualThreadNumber - 1] = "OTWIERAM"
-					otwieranie(oknoeqS1, oknoeq1, open_Counter)
-				if (open_Counter > 45):
-					data.STATUS[ActualThreadNumber - 1] = "USUWAM"
-					open_Counter = 1
-					if REMOVE_TRASH == 1:
-						usun(oknostart1, okno1, oknoeqS1, oknoeq1)
 	return 0
 
 
@@ -323,24 +295,6 @@ def szukajliczb(restart_Counter, oknoCHAT1, oknoCHAT2):
 		wynik = czytajCHAT(oknoCHAT1, oknoCHAT2)
 	return wynik
 
-
-def otwieranie(oknoeq1, oknoeq2, open_Counter):
-	pyautogui.moveTo(oknoeq1[0], oknoeq1[1], 0.1)
-	if (open_Counter == 45):
-		for s in range(0, 9):
-			pyautogui.moveTo(oknoeq1[0] + 165, 5 + (oknoeq1[1] + (s * 32)), 1)
-			pyautogui.moveTo(oknoeq1[0] + 0, 5 + (oknoeq1[1] + (s * 32)), 1)
-
-	if open_Counter % 6 == 3:
-		for key in ryby:
-			ryba = szukajwoknie(oknoeq1, oknoeq2, ryby[key])
-			if (ryba != 0):
-				pyautogui.moveTo(ryba[0], ryba[1], 0.25)
-				time.sleep(0.35)
-				pyautogui.click(button='right')
-
-
-# MENU
 
 def threads_stop(ActualThreadNumber):
 	time.sleep(4)

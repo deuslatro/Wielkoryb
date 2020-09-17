@@ -1,5 +1,4 @@
 import os
-import sys
 from PIL import  Image
 import numpy as np
 # Bazowy config
@@ -23,7 +22,7 @@ MAX_CLIENTS = 4
 #aktualizuje okno bota do zamkniecia watkow
 
 
-
+MOUSE = 1
 STATUS = []
 STATUS.append("OFF")
 STATUS.append("OFF")

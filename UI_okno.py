@@ -568,12 +568,12 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "BOT - Wedkarz"))
         self.labelBot7.setText(_translate("MainWindow", "OFF"))
         self.labelBot4.setText(_translate("MainWindow", "Klient 2:"))
         self.labelBot5.setText(_translate("MainWindow", "Klient 3:"))
         self.labelBot9.setText(_translate("MainWindow", "OFF"))
-        self.labelBot2.setText(_translate("MainWindow", "WĘDKARZ v3.3"))
+        self.labelBot2.setText(_translate("MainWindow", "WĘDKARZ v3.6"))
         self.labelBot3.setText(_translate("MainWindow", "Klient 1:"))
         self.pushButton1.setText(_translate("MainWindow", "START (F5)"))
         self.pushButton1.setShortcut(_translate("MainWindow", "F5"))
