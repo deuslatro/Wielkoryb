@@ -1,23 +1,39 @@
 import discord
-from discord.ext import commands
+import asyncio
+import threading
+from time import sleep
+
+class MyClient(discord.Client):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # create the background task and run it in the background
+        #self.bg_task = self.loop.create_task(self.signal("essa"))
+
+    async def on_ready(self):
+        print('Logged in as')
+        print(self.user.name)
+        print(self.user.id)
+        #await self.signal("xD")
+
+    async def signal(self,msg):
+        print("xD")
+        await self.wait_until_ready()
+        channel = self.get_channel(756525875452706846) # channel ID goes here
+        await channel.send(msg)
 
 
-description = '''Komendy to: 
-start.{ilosc botow}
-stop
-write.{text}
-'''
-bot = commands.Bot(command_prefix='.', description=description)
 
-@bot.event
-async def on_ready():
-    print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
-    print('------')
+    def getLoop(self):
+        return self.loop
 
-@bot.command()
-async def start(ctx,ilosc):
-	await ctx.send(f'startuje {ilosc} botow')
+client = MyClient()
+def runBot():
+    client.run('NzU2NTQwMjE2Mzk4ODM5OTY5.X2TU-w.OCfhfX3b65KdXu3apw7I__Pqv-c')
 
-bot.run('NzU2NTQwMjE2Mzk4ODM5OTY5.X2TU-w.7csHxWLMxW503jP5ogVzsnxJ-y8')
+discordBot = threading.Thread(target=runBot,daemon=True)
+discordBot.start()
+
+
+
+

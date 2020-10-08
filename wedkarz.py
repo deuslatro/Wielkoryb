@@ -8,6 +8,7 @@ from enum import Enum
 import d3dshot
 import data
 import mouse
+import disbot
 
 # from matplotlib import pyplot as plt
 
@@ -212,6 +213,7 @@ def whichThread():
 
 def start():
 	global THREAD
+	disbot.msg_discord()
 	ActualThreadNumber = whichThread()
 	print("NAZWA BOTA: ", threading.current_thread().name)
 	update()
