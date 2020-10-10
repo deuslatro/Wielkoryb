@@ -1,11 +1,12 @@
 import os
 from PIL import  Image
 import numpy as np
+
 # Bazowy config
 DATA = {
 	"Otwieraj_Ryby": 0,
 	"Zapis_Screenow": 0,
-	"Usuwaj_Smieci": 0,
+	"Discord_Bot": 1,
 	"Rozdzielczosc_Klienta": 1,
 	"Klient_1": 1,
 	"Klient_2": 0,

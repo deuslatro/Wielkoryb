@@ -1,3 +1,4 @@
+import asyncio
 import time
 import threading
 import pyautogui
@@ -9,8 +10,9 @@ import d3dshot
 import data
 import mouse
 import disbot
-
-# from matplotlib import pyplot as plt
+#do testow czasami przydatne
+import matplotlib.pyplot as plt
+from mss import mss
 
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
@@ -26,26 +28,30 @@ WHICHTHREAD = 0  # ustalanie ktory watek odpalony za pomoca nazwy
 screenGrab = d3dshot.create(capture_output="numpy")
 OPEN = 0
 PRINTSCREEN = 0
-REMOVE_TRASH = 0
+DISCORD_BOT = 0
 RESOLUTION = 0  # 1=640:360 / 800:600 rozdzielczość klienta
 fish_Delay = int(data.DATA.get("Fish_Delay"))
 space_Delay = int(data.DATA.get("Space_Delay"))
 until_Restart = int(data.DATA.get("until_Restart"))
 fish_Delay = fish_Delay / 1000
 space_Delay = space_Delay / 1000
-print(fish_Delay)
-print(space_Delay)
-print(until_Restart)
+print('opoznienie lowienia:', fish_Delay)
+print('opoznienie wylawiania(odstep miedzy spacjiami):', space_Delay)
+print('iteracji do RESTARTU:', until_Restart)
 lock = threading.Lock()
+eventLoop = asyncio.get_event_loop()
+sct = mss()
+color_filter_10 = np.array([198, 195, 198])  # Kolor pixeli wiadomosci prywatnej(ikony)
+color_filter_20 = np.array([255, 230, 168])  # Kolor tekstu INFORMACJI w cliencie
 
 
-def update():
+def updateConfig():
 	global OPEN
 	OPEN = int(data.DATA.get("Otwieraj_Ryby"))
 	global PRINTSCREEN
 	PRINTSCREEN = int(data.DATA.get("Zapis_Screenow"))
-	global REMOVE_TRASH
-	REMOVE_TRASH = int(data.DATA.get("Usuwaj_Smieci"))
+	global DISCORD_BOT
+	DISCORD_BOT = int(data.DATA.get("Discord_Bot"))
 	global RESOLUTION  # 1=640:360 / 800:600 rozdzielczość klienta
 	RESOLUTION = int(data.DATA.get("Rozdzielczosc_Klienta"))
 
@@ -56,16 +62,13 @@ sample = data.load_images_toPIL('img/samples/')
 smieci = data.load_images_toPIL('img/smieci/')
 chat = data.load_images_toPIL('img/chat/')
 numpyData = data.load_images_toNUMPY('img/numpy')
-
-update()
-
+updateConfig()
 
 class BotPosition(Enum):
 	TOP_LEFT = 1
 	TOP_RIGHT = 2
 	BOTTOM_LEFT = 3
 	BOTTOM_RIGHT = 4
-
 
 def find_logo(botPosition):
 	logo = sample["logo.png"]
@@ -110,7 +113,7 @@ def find_logo(botPosition):
 
 # szuka danej bitmapy w danym obszarze i zwraca jej prawy dolny(?) rog jako koordynaty [uwzglednia maske (pusty bit)]
 def searchInWindow(window, szukany):
-	#window1 prawy gorny rog okna, window2 lewy dolny
+	# window1 prawy gorny rog okna, window2 lewy dolny
 	window1 = (window[0], window[1])
 	window2 = (window[2], window[3])
 	box1 = szukany.getbbox()
@@ -118,6 +121,7 @@ def searchInWindow(window, szukany):
 	szer = window2[0] - window1[0]
 	wys = window2[1] - window1[1]
 	sum = box1[2] * box1[3]
+	cordinate3 = 0, 0
 	for a in range(0, szer):
 		for b in range(0, wys):
 			cordinate2 = a, b
@@ -159,22 +163,27 @@ def searchInWindow(window, szukany):
 	return 0
 
 
-def numpyFinder(chatWindow, sample):
-	sectorXY = (chatWindow[0],chatWindow[1])
-	sectorXY2 = (chatWindow[2],chatWindow[3])
-	img = screenGrab.screenshot(region=(sectorXY[0], sectorXY[1], sectorXY2[0], sectorXY2[1]))
-	color_filter_20 = np.array([255, 230, 168])
-	color_filter_30 = np.array([0, 15, 255])
-	img[np.all(img != color_filter_20, axis=-1)] = color_filter_30
-	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)
-	mn, _, mnLoc, _ = cv2.minMaxLoc(result)
-	# print("Podobienstwo :", mn, threading.current_thread().name)
-
+# Wyszukuje w oknie o podanych koordach oraz wielkosci wszystkie pixele jednakowego koloru na takiej samej pozycji
+def numpyFinder(searchWindow, sample, filter):
+	bounding_box = {'top': searchWindow[1], 'left': searchWindow[0], 'width': searchWindow[2] - searchWindow[0],
+	                'height': searchWindow[3] - searchWindow[1]}
+	sct_img = sct.grab(bounding_box)  # pobranie wycinka z monitora do buffora
+	img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")  # tworzenie kopii wycinku z bufora
+	# do podgladu wycinka przed zmiana
+	# plt.imshow(img)
+	# plt.show()
+	color_filter_30 = np.array([0, 15, 255])  # Losowy kolor by w niego zmienic pixele nie majace znaczenia
+	img = np.array(img)  # konwersja z wycinka obrazu z bufora  do tablicy numpy
+	img[np.all(img != filter,
+	           axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
+	# do podgladu wycinka po zmianie
+	# plt.imshow(img)
+	# plt.show()
+	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)  # wyszukiwanie obrazu w obrazie
+	mn, _, mnLoc, _ = cv2.minMaxLoc(result)  # wynik obrazu w obrazie (mn o ile odbiega od przykladu)
+	# print(f"Podobienstwo :", mnLoc,mn, threading.current_thread().name)
 	if mn == 0:
-		# nie dziala wielowatkowo (tylko do sprawdzania)
-		# plt.imshow(img)
-		# plt.show()
-		return (1, img)
+		return (mnLoc, img)
 	return (0, 0)
 
 
@@ -189,7 +198,7 @@ def numpyWhichNumber(sample, img):
 
 
 def readCHAT(chatWindow):
-	(szukaj, img) = numpyFinder(chatWindow, numpyData.get('lowienie.npy'))
+	(szukaj, img) = numpyFinder(chatWindow, numpyData.get('lowienie.npy'), color_filter_20)
 	if (szukaj != 0):
 		for x in range(1, 6):
 			if numpyWhichNumber(sample=numpyData.get(f'{x}.npy'), img=img) != 0:
@@ -213,10 +222,9 @@ def whichThread():
 
 def start():
 	global THREAD
-	disbot.msg_discord()
 	ActualThreadNumber = whichThread()
 	print("NAZWA BOTA: ", threading.current_thread().name)
-	update()
+	updateConfig()
 	THREAD = 1
 	initialization(ActualThreadNumber)
 	print("Koniec dzialania bota", threading.current_thread().name)
@@ -233,22 +241,20 @@ def startNewBots(numberOfBots: int):
 
 def initialization(ActualThreadNumber):
 	try:
-		(logoPosition, gameWindow, chatWindow1, eqWindow) = checkBox(ActualThreadNumber)
+		(logoPosition, gameWindow, chatWindow1, eqWindow, msgBox) = checkBox(ActualThreadNumber)
 	except TypeError:
 		print(f"Brak Loga badz eq/chatu {BotPosition(ActualThreadNumber).name}")
 		return 0
-
-	global INFO1
-	global INFO2
+	wholeWindow = logoPosition + gameWindow
 	print("ilosc restartow: ", RESTART_COUNT)
-	baitPosition = searchInWindow(logoPosition + gameWindow, sample["robak.png"])
+	baitPosition = searchInWindow(wholeWindow, sample["robak.png"])
 	if (baitPosition == 0):
 		print(f"Brak robaka watek {BotPosition(ActualThreadNumber).name}")
 		data.STATUS[ActualThreadNumber - 1] = "ERR(ROBAK)"
 		time.sleep(10)
 		initialization(ActualThreadNumber)
 
-	fishingPosition = searchInWindow(logoPosition + gameWindow, sample["low.png"])
+	fishingPosition = searchInWindow(wholeWindow, sample["low.png"])
 	if (fishingPosition == 0):
 		print(f"nie znaleziono wedki w watku {BotPosition(ActualThreadNumber).name}")
 		data.STATUS[ActualThreadNumber - 1] = "ERR(WEDKA)"
@@ -256,15 +262,15 @@ def initialization(ActualThreadNumber):
 		initialization(ActualThreadNumber)
 
 	data.STATUS[ActualThreadNumber - 1] = "START"
-	fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1)
+	fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow)
 
 
-def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1):
+def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow):
 	global RESTART_COUNT
 	while THREAD == 1:
-		time.sleep(2)
+		time.sleep(1.5)
 		data.STATUS[ActualThreadNumber - 1] = "ŁOWIE"
-		time.sleep(2)
+		time.sleep(1.5)
 		mouse.q.put(('move', baitPosition[0], baitPosition[1], fish_Delay))
 		mouse.q.put(('move', fishingPosition[0], fishingPosition[1], fish_Delay))
 		time.sleep(8)
@@ -273,8 +279,14 @@ def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1):
 		restart_Counter = 0
 		while fish_Loop == 0:
 			with lock:
+				if DISCORD_BOT == 1:
+					(msgIconPosition, _) = numpyFinder(msgBox, numpyData.get('msg.npy'), color_filter_10)
+					if msgIconPosition != 0:
+						print("WIADOMOSC MSG")
+						msgIconPosition = msgIconPosition[0] + msgBox[0], msgIconPosition[1] + msgBox[1]
+						conversation(msgIconPosition, ActualThreadNumber, wholeWindow)
 				fish_Loop = searchInChat(restart_Counter, chatWindow1)
-			restart_Counter = restart_Counter + 1
+			restart_Counter += 1
 			if THREAD != 1:
 				data.STATUS[ActualThreadNumber - 1] = "STOPOWANKO"
 				break
@@ -287,8 +299,28 @@ def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1):
 				data.STATUS[ActualThreadNumber - 1] = f"FOUND {fish_Loop}"
 				mouse.q.put(('click', fishingPosition[0], fishingPosition[1], fish_Loop, space_Delay))
 				time.sleep(5.5)
+
 	return 0
 
+
+def conversation(msgIconPosition, ActualThreadNumber, wholeWindow):
+	exitLoop = 1
+	future = asyncio.run_coroutine_threadsafe(disbot.client.signal(f"Wiadomosc w watku:{ActualThreadNumber}"),
+	                                          eventLoop)
+	result = future.result()
+	mouse.q.put(('LMB', msgIconPosition[0], msgIconPosition[1], 1, space_Delay))
+	time.sleep(2)
+	msgWindowPosition = searchInWindow(window=wholeWindow, szukany=sample['msg2.png'])
+	msgWindowBox = msgWindowPosition[0] - 230, msgWindowPosition[1] - 130, msgWindowPosition[0], msgWindowPosition[1]
+	screen = ImageGrab.grab(bbox=msgWindowBox)
+	screen.save("screen.png")
+	future = asyncio.run_coroutine_threadsafe(disbot.client.sendScreen(screen), eventLoop)
+	result = future.result()
+	while exitLoop == 1:
+		pass
+
+
+# print("wiadomosc w watku ",ActualThreadNumber)
 
 def searchInChat(restart_Counter, chatWindow):
 	# ilosc  prob przed restartem
@@ -311,7 +343,7 @@ def stop():
 
 def checkBox(ActualThreadNumber):
 	logoPosition = find_logo(ActualThreadNumber)
-	update()
+	updateConfig()
 	if logoPosition == 0:
 		print(f"BRAK LOGA W WATKU {BotPosition(ActualThreadNumber).name}")
 		data.STATUS[ActualThreadNumber - 1] = "ERR(LOGO)"
@@ -341,6 +373,10 @@ def checkBox(ActualThreadNumber):
 		# pozycja wzgledem probki protokołu chatu[ikony wyślij wiadomość]
 		chatWindow = chat[0] - 355, chat[1] - 28, chat[0] - 295, chat[1] - 14
 
+	if RESOLUTION == 1:
+		msgBox = logoPosition[0], logoPosition[1] + 25, logoPosition[0] + 25, logoPosition[1] + 65
+	else:
+		msgBox = logoPosition[0] + 715, logoPosition[1] + 180, logoPosition[0] + 740, logoPosition[1] + 220
 	if PRINTSCREEN == 1:
 		img = ImageGrab.grab(bbox=None)
 		draw = ImageDraw.Draw(img)
@@ -348,27 +384,29 @@ def checkBox(ActualThreadNumber):
 		printEQ = eqWindow
 		printDebug = eqWindow[0] + 14, eqWindow[1] + 22, eqWindow[0] + 23, eqWindow[1] + 31
 		if RESOLUTION == 1:
-			printFishDebug = logoPosition[0] + 465, logoPosition[1] + 355 ,logoPosition[0] + 472, logoPosition[1] + 362
+			printFishDebug = logoPosition[0] + 465, logoPosition[1] + 355, logoPosition[0] + 472, logoPosition[1] + 362
 		else:
 			printFishDebug = logoPosition[0] + 552, logoPosition[1] + 597, logoPosition[0] + 560, logoPosition[1] + 604
 		# rysowanie
 		draw.rectangle(printWindow, outline=128, width=3)
 		draw.rectangle(printEQ, outline=(64, 255, 128), width=3)
+		draw.rectangle(msgBox, outline=(16, 255, 255), width=2)
 		draw.rectangle(printDebug, outline=(128, 255, 96), width=1)
 		draw.rectangle(printFishDebug, outline=(128, 255, 96), width=1)
 		img.save("boxy.png")
 		time.sleep(0.5)
+		print("TEST")
 		if chat != 0:
 			draw.rectangle(chatWindow, outline=(0, 255, 255), width=3)
 
 	if threading.current_thread().name != "MainThread":
-		return logoPosition, gameWindow, chatWindow, eqWindow
-	return logoPosition, gameWindow, eqWindow
+		return logoPosition, gameWindow, chatWindow, eqWindow, msgBox
+	return logoPosition, gameWindow, eqWindow, msgBox
 
 
 def probka(a):
 	try:
-		(logoPosition, gameWindow, eqWindow) = checkBox(1)
+		(logoPosition, gameWindow, eqWindow, msgBox) = checkBox(1)
 
 		# Obszar pobierania próbki(dla lowianie (F4))
 		if a == sample["low.png"]:

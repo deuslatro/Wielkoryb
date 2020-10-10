@@ -5,9 +5,8 @@ from time import sleep
 import asyncio
 
 #PRZEKAZYWANIE z kodu do DICORDBOTA
-loop = asyncio.get_event_loop()
-future = asyncio.run_coroutine_threadsafe(disbot.client.signal("essa"), loop)
-result = future.result()
+#future = asyncio.run_coroutine_threadsafe(disbot.client.signal("essa"), loop)
+#result = future.result()
 
 from PyQt5.QtWidgets import QApplication
 
