@@ -1,4 +1,12 @@
 import sys
+import disbot
+#from disbot import signal
+from time import sleep
+import asyncio
+
+#PRZEKAZYWANIE z kodu do DICORDBOTA
+#future = asyncio.run_coroutine_threadsafe(disbot.client.signal("essa"), loop)
+#result = future.result()
 
 from PyQt5.QtWidgets import QApplication
 
