@@ -19,13 +19,13 @@ pyautogui.FAILSAFE = False
 # GLOBAL VARIABLES
 ########################################################################
 pustybit = (0, 15, 255)  # Wartosc bita "maski"
-chatBitN = np.array([255, 230, 168])  # Wartosc bita "maski"
 chatBit = (255, 230, 168)
 RESTART_COUNT = 0  # licznik ile razy boty łącznie zostaly zrestartowane podczas aktualneej sesji
 THREAD = 1  # Zmienna do konczenia wszystkich watkow (STOP botow)
 WHICHTHREAD = 0  # ustalanie ktory watek odpalony za pomoca nazwy
 
 screenGrab = d3dshot.create(capture_output="numpy")
+
 OPEN = 0
 PRINTSCREEN = 0
 DISCORD_BOT = 0
@@ -62,6 +62,17 @@ sample = data.load_images_toPIL('img/samples/')
 smieci = data.load_images_toPIL('img/smieci/')
 chat = data.load_images_toPIL('img/chat/')
 numpyData = data.load_images_toNUMPY('img/numpy')
+
+
+np.save('img/numpy/lowienie.npy',np.array(chat.get('lowienie.png')))
+np.save('img/numpy/check1.npy',np.array(chat.get('check1.png')))
+np.save('img/numpy/check2.npy',np.array(chat.get('check2.png')))
+np.save('img/numpy/check3.npy',np.array(chat.get('check3.png')))
+np.save('img/numpy/1.npy',np.array(chat.get('1.png')))
+np.save('img/numpy/2.npy',np.array(chat.get('2.png')))
+np.save('img/numpy/3.npy',np.array(chat.get('3.png')))
+np.save('img/numpy/4.npy',np.array(chat.get('4.png')))
+np.save('img/numpy/5.npy',np.array(chat.get('5.png')))
 updateConfig()
 
 class BotPosition(Enum):
@@ -174,24 +185,33 @@ def numpyFinder(searchWindow, sample, filter):
 	# plt.show()
 	color_filter_30 = np.array([0, 15, 255])  # Losowy kolor by w niego zmienic pixele nie majace znaczenia
 	img = np.array(img)  # konwersja z wycinka obrazu z bufora  do tablicy numpy
-	img[np.all(img != filter,
-	           axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
-	# do podgladu wycinka po zmianie
-	# plt.imshow(img)
-	# plt.show()
+	img[np.all(img != filter,axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
+	#szukanie ktory komunikat
 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)  # wyszukiwanie obrazu w obrazie
-	mn, _, mnLoc, _ = cv2.minMaxLoc(result)  # wynik obrazu w obrazie (mn o ile odbiega od przykladu)
-	# print(f"Podobienstwo :", mnLoc,mn, threading.current_thread().name)
+	mn, _, mnLoc, maxLoc = cv2.minMaxLoc(result)  # wynik obrazu w obrazie (mn o ile odbiega od przykladu)
 	if mn == 0:
-		return (mnLoc, img)
+		# plt.imshow(img)
+		# plt.show()
+		# print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
+		return (maxLoc, img)
 	return (0, 0)
 
 
 def numpyWhichNumber(sample, img):
 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)
 	mn, _, mnLoc, _ = cv2.minMaxLoc(result)
-	# print("Podobienstwo :", mn, threading.current_thread().name)
+	#print("Podobienstwo :", mn, threading.current_thread().name)
 	if mn == 0:
+		return 1
+	else:
+		return 0
+
+def newnumpyWhichNumber(sample, img):
+	comparison = sample == img
+	equal_arrays = comparison.all()
+	print(equal_arrays)
+	#print("Podobienstwo :", mn, threading.current_thread().name)
+	if equal_arrays:
 		return 1
 	else:
 		return 0
@@ -200,10 +220,15 @@ def numpyWhichNumber(sample, img):
 def readCHAT(chatWindow):
 	(szukaj, img) = numpyFinder(chatWindow, numpyData.get('lowienie.npy'), color_filter_20)
 	if (szukaj != 0):
-		for x in range(1, 6):
-			if numpyWhichNumber(sample=numpyData.get(f'{x}.npy'), img=img) != 0:
-				print(f"Znaleziono {x} na Chacie ", threading.current_thread().name)
-				return x
+		for x in range(1, 4):
+			if numpyWhichNumber(sample=numpyData.get(f'check{x}.npy'), img=img) != 0:
+				print(szukaj[1])
+				img2 = img[x*15+szukaj[1]-2:x*15+szukaj[1]+5,91:96,:]
+				#plt.imshow(img2)
+				#plt.show()
+				for findnumber in range (1,6):
+					if newnumpyWhichNumber(sample=numpyData.get(f'{findnumber}.npy'), img=img2) != 0:
+						return findnumber
 	return 0
 
 
@@ -361,7 +386,7 @@ def checkBox(ActualThreadNumber):
 		return 0
 	else:
 		# pozycja wzgledem probki eq[ikany DOPALACZE]
-		eqWindow = eqPosition[0] + 15, eqPosition[1] - 70, eqPosition[0] + 180, eqPosition[1] + 225
+		eqWindow = eqPosition[0] - 25, eqPosition[1] - 310, eqPosition[0] + 155, eqPosition[1] + 10
 
 	chat = searchInWindow(logoPosition + gameWindow, sample["chat.png"])
 	if chat == 0:
@@ -371,7 +396,7 @@ def checkBox(ActualThreadNumber):
 			return 0
 	else:
 		# pozycja wzgledem probki protokołu chatu[ikony wyślij wiadomość]
-		chatWindow = chat[0] - 355, chat[1] - 28, chat[0] - 295, chat[1] - 14
+		chatWindow = chat[0] - 365, chat[1] - 80, chat[0] - 255, chat[1] - 14
 
 	if RESOLUTION == 1:
 		msgBox = logoPosition[0], logoPosition[1] + 25, logoPosition[0] + 25, logoPosition[1] + 65
@@ -393,6 +418,7 @@ def checkBox(ActualThreadNumber):
 		draw.rectangle(msgBox, outline=(16, 255, 255), width=2)
 		draw.rectangle(printDebug, outline=(128, 255, 96), width=1)
 		draw.rectangle(printFishDebug, outline=(128, 255, 96), width=1)
+		draw.rectangle(chatWindow,outline=(255,16,16),width=2)
 		img.save("boxy.png")
 		time.sleep(0.5)
 		print("TEST")
