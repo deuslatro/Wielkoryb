@@ -23,9 +23,8 @@ pustybit = (0, 15, 255)  # Wartosc bita "maski"
 RESTART_COUNT = 0  # licznik ile razy boty łącznie zostaly zrestartowane podczas aktualneej sesji
 THREAD = 1  # Zmienna do konczenia wszystkich watkow (STOP botow)
 WHICHTHREAD = 0  # ustalanie ktory watek odpalony za pomoca nazwy
-
+exitConversationLoop = 0
 screenGrab = d3dshot.create(capture_output="numpy")
-
 
 #   POZYCJONOWANIE OBSZAROW BOTA   #
 #rozdzielczosc gry(jakiej wielkosci jest okno gry w ktorym bot ma szukac)
@@ -101,18 +100,7 @@ def find_logo(botPosition,logo):
 	box3 = logo.getbbox()
 	img = ImageGrab.grab()
 	screenSize = [0, 0, img.size[0], img.size[1]]
-	if botPosition == 1:
-		screenSize[2] = int(img.size[0] / 2)
-		screenSize[3] = int(img.size[1] / 2)
-	elif botPosition == 2:
-		screenSize[0] = int((img.size[0] / 2) + 1)
-		screenSize[3] = int((img.size[1] / 2) + 1)
-	elif botPosition == 3:
-		screenSize[2] = int(img.size[0] / 2)
-		screenSize[1] = int(img.size[1] / 2)
-	elif botPosition == 4:
-		screenSize[1] = int((img.size[1] / 2) + 1)
-		screenSize[0] = int((img.size[1] / 2) + 1)
+	screenSize=botWindowPosition(screenSize,botPosition,img)
 	h = 0
 	print(
 		f"dla watku {threading.current_thread().name}  obszar poszukiwań: szerokosc: {screenSize[0]} {screenSize[2]} wysokosc: {screenSize[1]} {screenSize[3]}")
@@ -361,21 +349,22 @@ def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgB
 
 
 def conversation(msgIconPosition, ActualThreadNumber, wholeWindow):
-	exitLoop = 1
+	disbot.exitConversationLoop = 1
 	future = asyncio.run_coroutine_threadsafe(disbot.client.signal(f"Wiadomosc w watku:{ActualThreadNumber}"),
 	                                          eventLoop)
-	result = future.result()
+	future.result()
 	mouse.q.put(('LMB', msgIconPosition[0], msgIconPosition[1], 1, space_Delay))
 	time.sleep(2)
 	msgWindowPosition = searchInWindow(window=wholeWindow, szukany=sample['msg2.png'])
 	print(msgWindowPosition)
 	msgWindowBox = msgWindowPosition[0] - 230, msgWindowPosition[1] - 130, msgWindowPosition[0], msgWindowPosition[1]
 	screen = ImageGrab.grab(bbox=msgWindowBox)
-	screen.save("screen.png")
 	future = asyncio.run_coroutine_threadsafe(disbot.client.sendScreen(screen), eventLoop)
-	result = future.result()
-	while exitLoop == 1:
+	future.result()
+	while disbot.exitConversationLoop == 1:
 		pass
+	print("koniec rozmowy")
+
 
 
 # print("wiadomosc w watku ",ActualThreadNumber)
@@ -461,6 +450,49 @@ def checkBox(ActualThreadNumber):
 	if threading.current_thread().name != "MainThread":
 		return logoPosition, gameWindow, chatWindow, eqWindow, msgBox
 	return logoPosition, gameWindow, eqWindow, msgBox
+
+
+def botWindowPosition(screenSize,botPosition,img):
+	botPosition=int(botPosition)
+	if botPosition == 1:
+		screenSize[2] = int(img.size[0] / 2)
+		screenSize[3] = int(img.size[1] / 2)
+	elif botPosition == 2:
+		screenSize[0] = int((img.size[0] / 2) + 1)
+		screenSize[3] = int((img.size[1] / 2) + 1)
+	elif botPosition == 3:
+		screenSize[2] = int(img.size[0] / 2)
+		screenSize[1] = int(img.size[1] / 2)
+	elif botPosition == 4:
+		screenSize[1] = int((img.size[1] / 2) + 1)
+		screenSize[0] = int((img.size[1] / 2) + 1)
+	else:
+		print("brak podanego watku bota")
+	return screenSize
+
+def msgInGame(botPosition, tresc):
+	img = ImageGrab.grab()
+	screenSize = [0, 0, img.size[0], img.size[1]]
+	screenSize=botWindowPosition(screenSize,botPosition,img)
+	send = searchInWindow(screenSize , sample["msg2.png"])
+	if send == 0:
+		print("brak otwartej wiadomosci w oknie")
+	else:
+		mouse.q.put(('move', send[0]-35, send[1], 1, space_Delay))
+		mouse.q.put(('write', tresc, space_Delay))
+		mouse.q.put(('LMB', send[0], send[1], 1, space_Delay))
+		print('otwarta waidomosc : ' ,send)
+
+
+async def picToDiscord(botPosition):
+	img = ImageGrab.grab()
+	screenSize = [0, 0, img.size[0], img.size[1]]
+	screenSize=botWindowPosition(screenSize,botPosition,img)
+	sendButton = searchInWindow(screenSize , sample["msg2.png"])
+	msgWindowBox = sendButton[0] - 230, sendButton[1] - 130, sendButton[0], sendButton[1]
+	screen = ImageGrab.grab(bbox=msgWindowBox)
+	await disbot.client.sendScreen(screen)
+
 
 
 def probka(a):

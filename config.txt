@@ -4,8 +4,8 @@ Zapis_Screenow 1
 Discord_Bot 1
 Rozdzielczosc_Klienta 0
 Klient_1 1
-Klient_2 1
-Klient_3 1
+Klient_2 0
+Klient_3 0
 Klient_4 0
 Fish_Delay 100
 Space_Delay 75
