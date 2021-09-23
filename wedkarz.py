@@ -10,7 +10,7 @@ import d3dshot
 import data
 import mouse
 import disbot
-#do testow czasami przydatne
+# do testow czasami przydatne
 import matplotlib.pyplot as plt
 from mss import mss
 
@@ -19,17 +19,35 @@ pyautogui.FAILSAFE = False
 # GLOBAL VARIABLES
 ########################################################################
 pustybit = (0, 15, 255)  # Wartosc bita "maski"
-chatBit = (255, 230, 168)
+#chatBit = (255, 230, 168)
 RESTART_COUNT = 0  # licznik ile razy boty łącznie zostaly zrestartowane podczas aktualneej sesji
 THREAD = 1  # Zmienna do konczenia wszystkich watkow (STOP botow)
 WHICHTHREAD = 0  # ustalanie ktory watek odpalony za pomoca nazwy
 
 screenGrab = d3dshot.create(capture_output="numpy")
 
+
+#   POZYCJONOWANIE OBSZAROW BOTA   #
+#rozdzielczosc gry(jakiej wielkosci jest okno gry w ktorym bot ma szukac)
+#eq (wielkosc oraz pozycja eq wzgledem wyszukanej ikonki/ znaku)
+EQ_COORDS = 18 , -60
+EQ_SIZE =  165 , 305 #szerokosc / wysokosc
+#probka (1 slot w eq)
+SAMPLE_COORDS = 19 , 10
+SAMPLE_SIZE = 9,  9 #szerokosc / wysokosc
+#ikonka lowienia(slot f4 zalezny od rozdzielczosci klienta)
+#ikonka MSG(prawa strona zalezna od rozdzielczosci klienta)
+MSG_COORDS = 723 , 180
+MSG_SIZE = 10 , 100 #szerokosc / wysokosc
+#okno chatu(fragment w ktorym wyszukuje wiadomosci)
+CHAT_COORDS = -115, -28
+CHAT_SIZE = 80, 15 #szerokosc / wysokosc
+
 OPEN = 0
 PRINTSCREEN = 0
 DISCORD_BOT = 0
 RESOLUTION = 0  # 1=640:360 / 800:600 rozdzielczość klienta
+
 fish_Delay = int(data.DATA.get("Fish_Delay"))
 space_Delay = int(data.DATA.get("Space_Delay"))
 until_Restart = int(data.DATA.get("until_Restart"))
@@ -42,7 +60,7 @@ lock = threading.Lock()
 eventLoop = asyncio.get_event_loop()
 sct = mss()
 color_filter_10 = np.array([198, 195, 198])  # Kolor pixeli wiadomosci prywatnej(ikony)
-color_filter_20 = np.array([255, 230, 168])  # Kolor tekstu INFORMACJI w cliencie
+color_filter_20 = np.array([255, 255, 255])  # Kolor tekstu INFORMACJI w cliencie
 
 
 def updateConfig():
@@ -63,17 +81,14 @@ smieci = data.load_images_toPIL('img/smieci/')
 chat = data.load_images_toPIL('img/chat/')
 numpyData = data.load_images_toNUMPY('img/numpy')
 
-
-np.save('img/numpy/lowienie.npy',np.array(chat.get('lowienie.png')))
-np.save('img/numpy/check1.npy',np.array(chat.get('check1.png')))
-np.save('img/numpy/check2.npy',np.array(chat.get('check2.png')))
-np.save('img/numpy/check3.npy',np.array(chat.get('check3.png')))
-np.save('img/numpy/1.npy',np.array(chat.get('1.png')))
-np.save('img/numpy/2.npy',np.array(chat.get('2.png')))
-np.save('img/numpy/3.npy',np.array(chat.get('3.png')))
-np.save('img/numpy/4.npy',np.array(chat.get('4.png')))
-np.save('img/numpy/5.npy',np.array(chat.get('5.png')))
+np.save('img/numpy/lowienie.npy', np.array(chat.get('lowienie.png')))
+np.save('img/numpy/2.npy', np.array(chat.get('2.png')))
+np.save('img/numpy/3.npy', np.array(chat.get('3.png')))
+np.save('img/numpy/4.npy', np.array(chat.get('4.png')))
+np.save('img/numpy/5.npy', np.array(chat.get('5.png')))
+np.save('img/numpy/msg.npy', np.array(chat.get('msg.png')))
 updateConfig()
+
 
 class BotPosition(Enum):
 	TOP_LEFT = 1
@@ -81,8 +96,8 @@ class BotPosition(Enum):
 	BOTTOM_LEFT = 3
 	BOTTOM_RIGHT = 4
 
-def find_logo(botPosition):
-	logo = sample["logo.png"]
+
+def find_logo(botPosition,logo):
 	box3 = logo.getbbox()
 	img = ImageGrab.grab()
 	screenSize = [0, 0, img.size[0], img.size[1]]
@@ -180,13 +195,20 @@ def numpyFinder(searchWindow, sample, filter):
 	                'height': searchWindow[3] - searchWindow[1]}
 	sct_img = sct.grab(bounding_box)  # pobranie wycinka z monitora do buffora
 	img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")  # tworzenie kopii wycinku z bufora
+
 	# do podgladu wycinka przed zmiana
 	# plt.imshow(img)
 	# plt.show()
+
 	color_filter_30 = np.array([0, 15, 255])  # Losowy kolor by w niego zmienic pixele nie majace znaczenia
+	# do podgladu wycinka po zmianie
+
 	img = np.array(img)  # konwersja z wycinka obrazu z bufora  do tablicy numpy
-	img[np.all(img != filter,axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
-	#szukanie ktory komunikat
+	img[np.all(img != filter,
+	           axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
+	#plt.imshow(sample)
+	#plt.show()
+	# szukanie ktory komunikat
 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)  # wyszukiwanie obrazu w obrazie
 	mn, _, mnLoc, maxLoc = cv2.minMaxLoc(result)  # wynik obrazu w obrazie (mn o ile odbiega od przykladu)
 	if mn == 0:
@@ -197,20 +219,26 @@ def numpyFinder(searchWindow, sample, filter):
 	return (0, 0)
 
 
-def numpyWhichNumber(sample, img):
-	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)
-	mn, _, mnLoc, _ = cv2.minMaxLoc(result)
-	#print("Podobienstwo :", mn, threading.current_thread().name)
-	if mn == 0:
-		return 1
-	else:
-		return 0
+# def numpyWhichNumber(sample, img):
+# 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)
+# 	mn, _, mnLoc, _ = cv2.minMaxLoc(result)
+# 	#print("Podobienstwo :", mn, threading.current_thread().name)
+# 	if mn == 0:
+# 		return 1
+# 	else:
+# 		return 0
 
-def newnumpyWhichNumber(sample, img):
+def numpyWhichNumber(sample, img):
+	if sample.shape != img.shape:
+		print("shape warning")
+		print(sample.shape, img.shape)
+		return 0
+	#plt.imshow(img)
+	#plt.show()
+	#plt.imshow(sample)
+	#plt.show()
 	comparison = sample == img
 	equal_arrays = comparison.all()
-	print(equal_arrays)
-	#print("Podobienstwo :", mn, threading.current_thread().name)
 	if equal_arrays:
 		return 1
 	else:
@@ -220,15 +248,12 @@ def newnumpyWhichNumber(sample, img):
 def readCHAT(chatWindow):
 	(szukaj, img) = numpyFinder(chatWindow, numpyData.get('lowienie.npy'), color_filter_20)
 	if (szukaj != 0):
-		for x in range(1, 4):
-			if numpyWhichNumber(sample=numpyData.get(f'check{x}.npy'), img=img) != 0:
-				print(szukaj[1])
-				img2 = img[x*15+szukaj[1]-2:x*15+szukaj[1]+5,91:96,:]
-				#plt.imshow(img2)
-				#plt.show()
-				for findnumber in range (1,6):
-					if newnumpyWhichNumber(sample=numpyData.get(f'{findnumber}.npy'), img=img2) != 0:
-						return findnumber
+		img2 = img[szukaj[1] -1:szukaj[1] + 8, 38:44, :]
+		#plt.imshow(img2)
+		#plt.show()
+		for findnumber in range(2, 6):
+			if numpyWhichNumber(sample=numpyData.get(f'{findnumber}.npy'), img=img2) != 0:
+				return findnumber
 	return 0
 
 
@@ -272,7 +297,7 @@ def initialization(ActualThreadNumber):
 		return 0
 	wholeWindow = logoPosition + gameWindow
 	print("ilosc restartow: ", RESTART_COUNT)
-	baitPosition = searchInWindow(wholeWindow, sample["robak.png"])
+	baitPosition = searchInWindow(eqWindow, sample["robak.png"])
 	if (baitPosition == 0):
 		print(f"Brak robaka watek {BotPosition(ActualThreadNumber).name}")
 		data.STATUS[ActualThreadNumber - 1] = "ERR(ROBAK)"
@@ -287,16 +312,22 @@ def initialization(ActualThreadNumber):
 		initialization(ActualThreadNumber)
 
 	data.STATUS[ActualThreadNumber - 1] = "START"
-	fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow)
+	fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow, eqWindow)
 
 
-def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow):
+def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow, eqWindow):
 	global RESTART_COUNT
 	while THREAD == 1:
 		time.sleep(1.5)
 		data.STATUS[ActualThreadNumber - 1] = "ŁOWIE"
-		time.sleep(1.5)
+		time.sleep(3.5)
 		mouse.q.put(('move', baitPosition[0], baitPosition[1], fish_Delay))
+		for key in ryby:
+			fishPosition = searchInWindow(eqWindow, ryby[key])
+			if fishPosition != 0:
+				mouse.q.put(('move', fishPosition[0], fishPosition[1], fish_Delay))
+				break
+
 		mouse.q.put(('move', fishingPosition[0], fishingPosition[1], fish_Delay))
 		time.sleep(8)
 		data.STATUS[ActualThreadNumber - 1] = "SZUKAM"
@@ -322,6 +353,7 @@ def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgB
 				initialization(ActualThreadNumber)
 			if fish_Loop > 0:
 				data.STATUS[ActualThreadNumber - 1] = f"FOUND {fish_Loop}"
+				# mouse.q.put(('click', baitPosition[0], baitPosition[1], 1, space_Delay))
 				mouse.q.put(('click', fishingPosition[0], fishingPosition[1], fish_Loop, space_Delay))
 				time.sleep(5.5)
 
@@ -336,6 +368,7 @@ def conversation(msgIconPosition, ActualThreadNumber, wholeWindow):
 	mouse.q.put(('LMB', msgIconPosition[0], msgIconPosition[1], 1, space_Delay))
 	time.sleep(2)
 	msgWindowPosition = searchInWindow(window=wholeWindow, szukany=sample['msg2.png'])
+	print(msgWindowPosition)
 	msgWindowBox = msgWindowPosition[0] - 230, msgWindowPosition[1] - 130, msgWindowPosition[0], msgWindowPosition[1]
 	screen = ImageGrab.grab(bbox=msgWindowBox)
 	screen.save("screen.png")
@@ -367,13 +400,12 @@ def stop():
 
 
 def checkBox(ActualThreadNumber):
-	logoPosition = find_logo(ActualThreadNumber)
+	logoPosition = find_logo(ActualThreadNumber,sample["logo.png"])
 	updateConfig()
 	if logoPosition == 0:
 		print(f"BRAK LOGA W WATKU {BotPosition(ActualThreadNumber).name}")
 		data.STATUS[ActualThreadNumber - 1] = "ERR(LOGO)"
 		return 0
-
 	if RESOLUTION == 1:
 		gameWindow = logoPosition[0] + 620, logoPosition[1] + 380
 	else:
@@ -385,8 +417,9 @@ def checkBox(ActualThreadNumber):
 		data.STATUS[ActualThreadNumber - 1] = "ERR(EQ)"
 		return 0
 	else:
-		# pozycja wzgledem probki eq[ikany DOPALACZE]
-		eqWindow = eqPosition[0] - 25, eqPosition[1] - 310, eqPosition[0] + 155, eqPosition[1] + 10
+		# pozycja wzgledem probki eq[handel postaciami]
+		eqWindow = eqPosition[0] + EQ_COORDS[0], eqPosition[1] + EQ_COORDS[1], eqPosition[0] + EQ_COORDS[0] + EQ_SIZE[
+			0], eqPosition[1]+EQ_COORDS[1] + EQ_SIZE[1]
 
 	chat = searchInWindow(logoPosition + gameWindow, sample["chat.png"])
 	if chat == 0:
@@ -396,29 +429,29 @@ def checkBox(ActualThreadNumber):
 			return 0
 	else:
 		# pozycja wzgledem probki protokołu chatu[ikony wyślij wiadomość]
-		chatWindow = chat[0] - 365, chat[1] - 80, chat[0] - 255, chat[1] - 14
+		chatWindow = chat[0] + CHAT_COORDS[0], chat[1] + CHAT_COORDS[1], chat[0] +CHAT_COORDS[0]+CHAT_SIZE[0], chat[1] +CHAT_COORDS[1]+CHAT_SIZE[1]
 
 	if RESOLUTION == 1:
-		msgBox = logoPosition[0], logoPosition[1] + 25, logoPosition[0] + 25, logoPosition[1] + 65
+		msgBox = logoPosition[0] + MSG_COORDS[0],  logoPosition[1] + MSG_COORDS[1],logoPosition[0] + MSG_COORDS[0]+MSG_SIZE[0], logoPosition[1] + MSG_COORDS[1]+MSG_SIZE[1]
 	else:
-		msgBox = logoPosition[0] + 715, logoPosition[1] + 180, logoPosition[0] + 740, logoPosition[1] + 220
+		msgBox = logoPosition[0] + MSG_COORDS[0],  logoPosition[1] + MSG_COORDS[1],logoPosition[0] + MSG_COORDS[0]+MSG_SIZE[0], logoPosition[1] + MSG_COORDS[1]+MSG_SIZE[1]
 	if PRINTSCREEN == 1:
 		img = ImageGrab.grab(bbox=None)
 		draw = ImageDraw.Draw(img)
 		printWindow = logoPosition + gameWindow
 		printEQ = eqWindow
-		printDebug = eqWindow[0] + 14, eqWindow[1] + 22, eqWindow[0] + 23, eqWindow[1] + 31
+		printDebug = eqWindow[0] + SAMPLE_COORDS[0],  eqWindow[1] + SAMPLE_COORDS[1],eqWindow[0] + SAMPLE_COORDS[0]+SAMPLE_SIZE[0], eqWindow[1] + SAMPLE_COORDS[1]+SAMPLE_SIZE[1]
 		if RESOLUTION == 1:
 			printFishDebug = logoPosition[0] + 465, logoPosition[1] + 355, logoPosition[0] + 472, logoPosition[1] + 362
 		else:
-			printFishDebug = logoPosition[0] + 552, logoPosition[1] + 597, logoPosition[0] + 560, logoPosition[1] + 604
+			printFishDebug = logoPosition[0] + 555, logoPosition[1] + 590, logoPosition[0] + 560, logoPosition[1] + 600
 		# rysowanie
 		draw.rectangle(printWindow, outline=128, width=3)
 		draw.rectangle(printEQ, outline=(64, 255, 128), width=3)
 		draw.rectangle(msgBox, outline=(16, 255, 255), width=2)
 		draw.rectangle(printDebug, outline=(128, 255, 96), width=1)
 		draw.rectangle(printFishDebug, outline=(128, 255, 96), width=1)
-		draw.rectangle(chatWindow,outline=(255,16,16),width=2)
+		draw.rectangle(chatWindow, outline=(255, 16, 16), width=2)
 		img.save("boxy.png")
 		time.sleep(0.5)
 		print("TEST")
@@ -433,7 +466,6 @@ def checkBox(ActualThreadNumber):
 def probka(a):
 	try:
 		(logoPosition, gameWindow, eqWindow, msgBox) = checkBox(1)
-
 		# Obszar pobierania próbki(dla lowianie (F4))
 		if a == sample["low.png"]:
 			if RESOLUTION == 1:
@@ -442,13 +474,18 @@ def probka(a):
 			else:
 				boxS = logoPosition[0] + 552, logoPosition[1] + 597
 				boxE = boxS[0] + 7, boxS[1] + 7
+			print('boxS:', boxS, 'boxE:', boxE)
 			img = ImageGrab.grab(bbox=boxS + boxE)
 			img.save(f"img/samples/low.png")
 			sample["low.png"] = img
 			print("zmieniono low")
 		else:
-			boxS = eqWindow[0] + 14, eqWindow[1] + 22
-			boxE = boxS[0] + 9, boxS[1] + 9
+
+			printDebug = eqWindow[0] + SAMPLE_COORDS[0],  eqWindow[1] + SAMPLE_COORDS[1],eqWindow[0] + SAMPLE_COORDS[0]+SAMPLE_SIZE[0], eqWindow[1] + SAMPLE_COORDS[1]+SAMPLE_SIZE[1]
+			print(printDebug)
+			boxS = printDebug[0],printDebug[1]
+			boxE = printDebug[2],printDebug[3]
+			print('boxS:',boxS,'boxE:',boxE)
 			img = ImageGrab.grab(bbox=boxS + boxE)
 
 		if a == sample["robak.png"]:
@@ -457,10 +494,10 @@ def probka(a):
 			print("zmieniono robaka")
 		for key in ryby:
 			if a == ryby[key]:
+				print(a)
 				img.save(f"img/ryby/{key}")
 				ryby[key] = img
 				print("zmieniono rybe")
-
-			break
-	except Exception:
-		print("Otworz EQ !")
+				break
+	except Exception as e:
+		print('Exception Sample:',repr(e))

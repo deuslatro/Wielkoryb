@@ -1,14 +1,14 @@
 Config Bota:
 Otwieraj_Ryby 0
-Zapis_Screenow 0
-Discord_Bot 0
+Zapis_Screenow 1
+Discord_Bot 1
 Rozdzielczosc_Klienta 0
 Klient_1 1
-Klient_2 0
-Klient_3 0
+Klient_2 1
+Klient_3 1
 Klient_4 0
-Fish_Delay 30
-Space_Delay 25
-until_Restart 5500
+Fish_Delay 100
+Space_Delay 75
+until_Restart 6000
 * 1=640:360 / 0=800:600 rozdzielczosc klienta
 ** Delay w ms[1/1000 s] mozna zmniejszac byleby klient metina zdazyl regowac na klikniecia** until_Restart liczy liczbe iteracji przed restartem (jezeli bot sie restartuje nim wyskoczy lowienie nalezy zwiekszyc)

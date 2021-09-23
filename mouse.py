@@ -18,15 +18,20 @@ def queueOperator():
 					pyautogui.moveTo(cmd[1],cmd[2])
 					time.sleep(cmd[3])
 					pyautogui.click(button='right')
+					time.sleep(cmd[3])
 				elif cmd[0] == 'click':
+					time.sleep(2*cmd[4])
 					pyautogui.moveTo(cmd[1], cmd[2])
-					time.sleep(cmd[4])
+					time.sleep(2*cmd[4])
 					for i in range(0,cmd[3]):
+						time.sleep(cmd[4])
 						pyautogui.click(button='right')
 						time.sleep(cmd[4])
 				elif cmd[0] == 'LMB':
+					print("LMB !!!")
 					pyautogui.moveTo(cmd[1], cmd[2])
-					time.sleep(cmd[3])
+					time.sleep(cmd[4])
 					pyautogui.click(button='left')
+					time.sleep(cmd[4])
 
 
