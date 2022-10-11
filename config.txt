@@ -2,7 +2,7 @@ Config Bota:
 Otwieraj_Ryby 0
 Zapis_Screenow 1
 Discord_Bot 0
-Rozdzielczosc_Klienta 0
+Rozdzielczosc_Klienta 1
 Klient_1 1
 Klient_2 0
 Klient_3 0
