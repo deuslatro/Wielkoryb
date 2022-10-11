@@ -6,7 +6,7 @@ import data
 
 q = queue.Queue()
 
-queueTimer=0.1
+queueTimer=0.01
 
 def queueOperator():
 	while(data.MOUSE==1):

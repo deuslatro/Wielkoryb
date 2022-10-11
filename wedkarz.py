@@ -29,9 +29,10 @@ screenGrab = d3dshot.create(capture_output="numpy")
 #   POZYCJONOWANIE OBSZAROW BOTA   #
 #rozdzielczosc gry(jakiej wielkosci jest okno gry w ktorym bot ma szukac)
 #eq (wielkosc oraz pozycja eq wzgledem wyszukanej ikonki/ znaku)
-EQ_COORDS = 18 , -60
+EQ_COORDS = 8 , -75
 EQ_SIZE =  165 , 305 #szerokosc / wysokosc
 #probka (1 slot w eq)
+BIOLOG = 1
 SAMPLE_COORDS = 19 , 10
 SAMPLE_SIZE = 9,  9 #szerokosc / wysokosc
 #ikonka lowienia(slot f4 zalezny od rozdzielczosci klienta)
@@ -39,12 +40,12 @@ SAMPLE_SIZE = 9,  9 #szerokosc / wysokosc
 MSG_COORDS = 723 , 180
 MSG_SIZE = 10 , 100 #szerokosc / wysokosc
 #okno chatu(fragment w ktorym wyszukuje wiadomosci)
-CHAT_COORDS = -115, -28
-CHAT_SIZE = 80, 15 #szerokosc / wysokosc
+CHAT_COORDS = -356, -29
+CHAT_SIZE = 40, 15 #szerokosc / wysokosc
 
 OPEN = 0
 PRINTSCREEN = 0
-DISCORD_BOT = 0
+DISCORD_BOT = 1
 RESOLUTION = 0  # 1=640:360 / 800:600 rozdzielczość klienta
 
 fish_Delay = int(data.DATA.get("Fish_Delay"))
@@ -59,7 +60,7 @@ lock = threading.Lock()
 eventLoop = asyncio.get_event_loop()
 sct = mss()
 color_filter_10 = np.array([198, 195, 198])  # Kolor pixeli wiadomosci prywatnej(ikony)
-color_filter_20 = np.array([255, 255, 255])  # Kolor tekstu INFORMACJI w cliencie
+color_filter_20 = np.array([174, 170, 111])  # Kolor tekstu INFORMACJI w cliencie
 
 
 def updateConfig():
@@ -81,6 +82,7 @@ chat = data.load_images_toPIL('img/chat/')
 numpyData = data.load_images_toNUMPY('img/numpy')
 
 np.save('img/numpy/lowienie.npy', np.array(chat.get('lowienie.png')))
+np.save('img/numpy/1.npy', np.array(chat.get('1.png')))
 np.save('img/numpy/2.npy', np.array(chat.get('2.png')))
 np.save('img/numpy/3.npy', np.array(chat.get('3.png')))
 np.save('img/numpy/4.npy', np.array(chat.get('4.png')))
@@ -185,23 +187,25 @@ def numpyFinder(searchWindow, sample, filter):
 	img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")  # tworzenie kopii wycinku z bufora
 
 	# do podgladu wycinka przed zmiana
-	# plt.imshow(img)
-	# plt.show()
+	#plt.imshow(img)
+	#plt.show()
 
 	color_filter_30 = np.array([0, 15, 255])  # Losowy kolor by w niego zmienic pixele nie majace znaczenia
-	# do podgladu wycinka po zmianie
 
 	img = np.array(img)  # konwersja z wycinka obrazu z bufora  do tablicy numpy
 	img[np.all(img != filter,
 	           axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
+	# do podgladu wycinka po zmianie
+	#plt.imshow(img)
+	#plt.show()
 	#plt.imshow(sample)
 	#plt.show()
 	# szukanie ktory komunikat
 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)  # wyszukiwanie obrazu w obrazie
 	mn, _, mnLoc, maxLoc = cv2.minMaxLoc(result)  # wynik obrazu w obrazie (mn o ile odbiega od przykladu)
 	if mn == 0:
-		# plt.imshow(img)
-		# plt.show()
+		#plt.imshow(img)
+		#plt.show()
 		# print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
 		return (maxLoc, img)
 	return (0, 0)
@@ -236,10 +240,10 @@ def numpyWhichNumber(sample, img):
 def readCHAT(chatWindow):
 	(szukaj, img) = numpyFinder(chatWindow, numpyData.get('lowienie.npy'), color_filter_20)
 	if (szukaj != 0):
-		img2 = img[szukaj[1] -1:szukaj[1] + 8, 38:44, :]
+		img2 = img[szukaj[1] -4:szukaj[1] + 5, 32:38, :]
 		#plt.imshow(img2)
 		#plt.show()
-		for findnumber in range(2, 6):
+		for findnumber in range(1, 6):
 			if numpyWhichNumber(sample=numpyData.get(f'{findnumber}.npy'), img=img2) != 0:
 				return findnumber
 	return 0
@@ -292,6 +296,12 @@ def initialization(ActualThreadNumber):
 		time.sleep(10)
 		initialization(ActualThreadNumber)
 
+	if BIOLOG == 1:
+		biologPosition = searchInWindow(wholeWindow, sample["biolog.png"])
+		if (biologPosition == 0):
+			print(f"Brak biologa ignorowanie {BotPosition(ActualThreadNumber).name}")
+
+
 	fishingPosition = searchInWindow(wholeWindow, sample["low.png"])
 	if (fishingPosition == 0):
 		print(f"nie znaleziono wedki w watku {BotPosition(ActualThreadNumber).name}")
@@ -300,15 +310,14 @@ def initialization(ActualThreadNumber):
 		initialization(ActualThreadNumber)
 
 	data.STATUS[ActualThreadNumber - 1] = "START"
-	fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow, eqWindow)
+	fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow, eqWindow, biologPosition)
 
 
-def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow, eqWindow):
+def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgBox, wholeWindow, eqWindow, biologPosition):
 	global RESTART_COUNT
 	while THREAD == 1:
-		time.sleep(1.5)
 		data.STATUS[ActualThreadNumber - 1] = "ŁOWIE"
-		time.sleep(3.5)
+		time.sleep(1.5)
 		mouse.q.put(('move', baitPosition[0], baitPosition[1], fish_Delay))
 		for key in ryby:
 			fishPosition = searchInWindow(eqWindow, ryby[key])
@@ -317,7 +326,10 @@ def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgB
 				break
 
 		mouse.q.put(('move', fishingPosition[0], fishingPosition[1], fish_Delay))
-		time.sleep(8)
+		if biologPosition != 0:
+			time.sleep(0.2)
+			mouse.q.put(('LMB', biologPosition[0], biologPosition[1],1, fish_Delay))
+		time.sleep(1.5)
 		data.STATUS[ActualThreadNumber - 1] = "SZUKAM"
 		fish_Loop = 0
 		restart_Counter = 0
@@ -339,10 +351,12 @@ def fishing(ActualThreadNumber, baitPosition, fishingPosition, chatWindow1, msgB
 				data.STATUS[ActualThreadNumber - 1] = "RESTART"
 				time.sleep(5)
 				initialization(ActualThreadNumber)
+				break
 			if fish_Loop > 0:
-				data.STATUS[ActualThreadNumber - 1] = f"FOUND {fish_Loop}"
-				# mouse.q.put(('click', baitPosition[0], baitPosition[1], 1, space_Delay))
-				mouse.q.put(('click', fishingPosition[0], fishingPosition[1], fish_Loop, space_Delay))
+				with lock:
+					data.STATUS[ActualThreadNumber - 1] = f"FOUND {fish_Loop}"
+					# mouse.q.put(('click', baitPosition[0], baitPosition[1], 1, space_Delay))
+					mouse.q.put(('click', fishingPosition[0], fishingPosition[1], fish_Loop, space_Delay))
 				time.sleep(5.5)
 
 	return 0
@@ -483,6 +497,15 @@ def msgInGame(botPosition, tresc):
 		mouse.q.put(('LMB', send[0], send[1], 1, space_Delay))
 		print('otwarta waidomosc : ' ,send)
 
+def closeMsgWindow(botPosition):
+	img = ImageGrab.grab()
+	screenSize = [0, 0, img.size[0], img.size[1]]
+	screenSize=botWindowPosition(screenSize,botPosition,img)
+	exitMsg = searchInWindow(screenSize , sample["exitMsg.png"])
+	if exitMsg == 0:
+		print("brak otwartej wiadomosci w oknie")
+	else:
+		mouse.q.put(('LMB', exitMsg[0], exitMsg[1]-25, 1, space_Delay))
 
 async def picToDiscord(botPosition):
 	img = ImageGrab.grab()

@@ -63,6 +63,17 @@ async def r(ctx, arg):
 		print('poprawna konstrukcja komendy : .r [ktory bot] np: .w 1')
 		await client.signal('poprawna konstrukcja komendy : .r [ktory bot] np: .w 1')
 
+
+@client.command()
+async def e(ctx, arg):
+	try:
+		if int(arg):
+			print("zamykam chat od bota :",arg)
+			wedkarz.closeMsgWindow(arg)
+	except ValueError:
+		print('poprawna konstrukcja komendy : .e [ktory bot] np: .e 1')
+		await client.signal('poprawna konstrukcja komendy : .e [ktory bot] np: .e 1')
+
 @client.command()
 async def restart(ctx):
 	print("restart botow :")
