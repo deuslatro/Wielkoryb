@@ -32,17 +32,18 @@ screenGrab = d3dshot.create(capture_output="numpy")
 EQ_COORDS = 8 , -75
 EQ_SIZE =  165 , 305 #szerokosc / wysokosc
 #probka (1 slot w eq)
-BIOLOG = 1
 SAMPLE_COORDS = 19 , 10
 SAMPLE_SIZE = 9,  9 #szerokosc / wysokosc
 #ikonka lowienia(slot f4 zalezny od rozdzielczosci klienta)
 #ikonka MSG(prawa strona zalezna od rozdzielczosci klienta)
-MSG_COORDS = 723 , 180
+MSG_COORDS = 0 , 20
 MSG_SIZE = 10 , 100 #szerokosc / wysokosc
 #okno chatu(fragment w ktorym wyszukuje wiadomosci)
 CHAT_COORDS = -440, -25 #pozycja wzgledem probki
 CHAT_SIZE = 48, 10 #szerokosc / wysokosc
 
+
+BIOLOG = 0
 OPEN = 0
 PRINTSCREEN = 0
 DISCORD_BOT = 1
@@ -206,18 +207,18 @@ def numpyFinder(searchWindow, sample, filter):
 	img[np.all(img != filter,
 	           axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
 	# do podgladu wycinka po zmianie
-	plt.imshow(img)
-	plt.show()
-	plt.imshow(sample)
-	plt.show()
+	# plt.imshow(img)
+	# plt.show()
+	# plt.imshow(sample)
+	# plt.show()
 	# szukanie ktory komunikat
 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)  # wyszukiwanie obrazu w obrazie
 	mn, _, mnLoc, maxLoc = cv2.minMaxLoc(result)  # wynik obrazu w obrazie (mn o ile odbiega od przykladu)
-	print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
+	# print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
 	if mn < 0.1:
-		plt.imshow(img)
-		plt.show()
-		print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
+		# plt.imshow(img)
+		# plt.show()
+		# print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
 		return (maxLoc, img)
 	return (0, 0)
 
@@ -311,6 +312,8 @@ def initialization(ActualThreadNumber):
 		biologPosition = searchInWindow(wholeWindow, sample["biolog.png"])
 		if (biologPosition == 0):
 			print(f"Brak biologa ignorowanie {BotPosition(ActualThreadNumber).name}")
+	else:
+		biologPosition = 0
 
 
 	fishingPosition = searchInWindow(wholeWindow, sample["low.png"])
@@ -336,22 +339,26 @@ def fishing(ActualThreadNumber, fishingPosition, chatWindow1, msgBox, wholeWindo
 		# 		mouse.q.put(('move', fishPosition[0], fishPosition[1], fish_Delay))
 		# 		break
 
+		with lock:
+			if DISCORD_BOT == 1:
+				print("check")
+				(msgIconPosition, _) = numpyFinder(msgBox, numpyData.get('msg.npy'), color_filter_10)
+				if msgIconPosition != 0:
+					print("WIADOMOSC MSG")
+					msgIconPosition = msgIconPosition[0] + msgBox[0], msgIconPosition[1] + msgBox[1]
+					conversation(msgIconPosition, ActualThreadNumber, wholeWindow)
+
 		mouse.q.put(('move', fishingPosition[0], fishingPosition[1], fish_Delay))
-		if biologPosition != 0:
-			time.sleep(0.2)
-			mouse.q.put(('LMB', biologPosition[0], biologPosition[1],1, fish_Delay))
+		# if biologPosition != 0:
+		# 	time.sleep(0.2)
+		# 	mouse.q.put(('LMB', biologPosition[0], biologPosition[1],1, fish_Delay))
+
 		time.sleep(7.5)
 		data.STATUS[ActualThreadNumber - 1] = "SZUKAM"
 		fish_Loop = 0
 		restart_Counter = 0
 		while fish_Loop == 0:
 			with lock:
-				if DISCORD_BOT == 1:
-					(msgIconPosition, _) = numpyFinder(msgBox, numpyData.get('msg.npy'), color_filter_10)
-					if msgIconPosition != 0:
-						print("WIADOMOSC MSG")
-						msgIconPosition = msgIconPosition[0] + msgBox[0], msgIconPosition[1] + msgBox[1]
-						conversation(msgIconPosition, ActualThreadNumber, wholeWindow)
 				fish_Loop = searchInChat(restart_Counter, chatWindow1)
 			restart_Counter += 1
 			if THREAD != 1:
@@ -375,7 +382,7 @@ def fishing(ActualThreadNumber, fishingPosition, chatWindow1, msgBox, wholeWindo
 
 def conversation(msgIconPosition, ActualThreadNumber, wholeWindow):
 	disbot.exitConversationLoop = 1
-	future = asyncio.run_coroutine_threadsafe(disbot.client.signal(f"Wiadomosc w watku:{ActualThreadNumber}"),
+	future = asyncio.run_coroutine_threadsafe(disbot.client.signal(f"@here Wiadomosc w watku:{ActualThreadNumber}"),
 	                                          eventLoop)
 	future.result()
 	mouse.q.put(('LMB', msgIconPosition[0], msgIconPosition[1], 1, space_Delay))
