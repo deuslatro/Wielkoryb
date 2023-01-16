@@ -9,7 +9,6 @@ import asyncio
 #result = future.result()
 
 from PyQt5.QtWidgets import QApplication
-
 from okno import MainWindow
 
 if __name__ == "__main__":

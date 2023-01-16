@@ -25,8 +25,7 @@ def queueOperator():
 					time.sleep(2*cmd[4])
 					for i in range(0,cmd[3]):
 						time.sleep(cmd[4])
-						pyautogui.click(button='right')
-						time.sleep(cmd[4])
+						pyautogui.click(cmd[1], cmd[2],button='right')
 				elif cmd[0] == 'LMB':
 					#print("LMB !!!")
 					pyautogui.moveTo(cmd[1], cmd[2])
@@ -35,7 +34,10 @@ def queueOperator():
 					time.sleep(cmd[4])
 				elif cmd[0] == 'write':
 					time.sleep(cmd[2])
-					pyautogui.write(cmd[1], interval=0.05)
+					pyautogui.write(cmd[1], interval=0.04)
+				elif cmd[0] == 'space':
+					time.sleep(cmd[2])
+					pyautogui.write(cmd[1], interval=0.04)
 
 
 
