@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+plot/
 build/
 develop-eggs/
 dist/
@@ -224,5 +225,8 @@ fabric.properties
 # Markdown Navigator plugin
 .idea/**/markdown-navigator.xml
 .idea/**/markdown-navigator/
+
+# custom
+boxy.png
 
 # End of https://www.gitignore.io/api/pycharm
