@@ -10,6 +10,7 @@ from mss import mss
 
 sct = mss()
 
+
 # szuka danej bitmapy w danym obszarze i zwraca jej prawy dolny rog jako koordynaty [uwzglednia maske (pusty bit)]
 def searchInWindow(window, szukany):
 	# window1 prawy gorny rog okna, window2 lewy dolny
@@ -62,11 +63,11 @@ def searchInWindow(window, szukany):
 	return 0
 
 
-def find_logo(botPosition,logo):
+def find_logo(botPosition, logo):
 	box3 = logo.getbbox()
 	img = ImageGrab.grab()
 	screenSize = [0, 0, img.size[0], img.size[1]]
-	screenSize=wedkarz.botWindowPosition(screenSize,botPosition,img)
+	screenSize = wedkarz.botWindowPosition(screenSize, botPosition, img)
 	h = 0
 	print(
 		f"dla watku {threading.current_thread().name}  obszar poszukiwań: szerokosc: {screenSize[0]} {screenSize[2]} wysokosc: {screenSize[1]} {screenSize[3]}")
@@ -90,11 +91,30 @@ def find_logo(botPosition,logo):
 							break
 	return 0
 
-def numpyWhichNumber(sample, img):
+
+def numpySameFinder(img, sample, filter):
+	"""
+	Takes 2 images and compare them using numpy
+	if they are the same return 1 else return 0
+	:param img: numpy Array OR tuple with all corners of the image position from screen
+	:param sample: numpy array of the sample
+	:param filter: numpy 1:3 array if we wanna use filter otherwise can be any
+	:return: 1 SAME 0 DIFFRENT
+	"""
+	if type(img) is tuple:
+		bounding_box = {'top': img[1], 'left': img[0], 'width': img[2] - img[0],
+		                'height': img[3] - img[1]}
+		sct_img = sct.grab(bounding_box)  # pobranie wycinka z monitora do buffora
+		img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")  # tworzenie kopii wycinku z bufora
+		img = np.array(img)  # konwersja z wycinka obrazu z bufora  do tablicy numpy
 	if sample.shape != img.shape:
 		print("shape warning")
 		print(sample.shape, img.shape)
 		return 0
+	color_filter_30 = np.array([0, 15, 255])  # Losowy kolor by w niego zmienic pixele nie majace znaczenia
+	if type(filter) == type(color_filter_30):
+		img[np.all(img != filter,
+		           axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
 	# plt.imshow(img)
 	# plt.show()
 	# plt.imshow(sample)
@@ -107,62 +127,82 @@ def numpyWhichNumber(sample, img):
 		return 0
 
 
-
-def numpyFinder(searchWindow, sample, filter):
+def takeSample(searchWindow, filename, filter):
 	bounding_box = {'top': searchWindow[1], 'left': searchWindow[0], 'width': searchWindow[2] - searchWindow[0],
 	                'height': searchWindow[3] - searchWindow[1]}
 	sct_img = sct.grab(bounding_box)  # pobranie wycinka z monitora do buffora
 	img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")  # tworzenie kopii wycinku z bufora
-	# do podgladu wycinka przed zmiana
-	# plt.imshow(img)
-	# plt.show()
-	color_filter_30 = np.array([0, 15, 255])  # Losowy kolor by w niego zmienic pixele nie majace znaczenia
-
 	img = np.array(img)  # konwersja z wycinka obrazu z bufora  do tablicy numpy
-	img[np.all(img != filter,
-	           axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
-	# do podgladu wycinka po zmianie
-	# plt.imshow(img)
-	# plt.show()
-	# plt.imsave("plot\plot"+str(random.randint(1,100))+".png",img)
-	# plt.imshow(sample)
-	# plt.show()
-	# szukanie ktory komunikat
+	if filter != 1:
+		color_filter_30 = np.array([0, 15, 255])  # Losowy kolor by w niego zmienic pixele nie majace znaczenia
+		img[np.all(img != wedkarz.color_filter_20,
+		           axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
+	plt.imsave("img\debugger\sample\\" + filename + ".png", img)
+	return 0
+
+
+def numpySimilarFinder(searchWindow, sample, similarity):
+	"""
+	Takes part of screen and try to find sample image inside it
+	:param searchWindow: tuple with all corners of screen you wanna search
+	:param sample: numpy array of the sample
+	:param similarity: 0-1 value how much sample was detected by search algorytm
+	:return: sample location,array of searched screen similarity threshold met |  0,0 threshold not met
+	"""
+	if isinstance(searchWindow, (np.ndarray)):
+		img = searchWindow
+	else:
+		bounding_box = {'top': searchWindow[1], 'left': searchWindow[0], 'width': searchWindow[2] - searchWindow[0],
+		                'height': searchWindow[3] - searchWindow[1]}
+		sct_img = sct.grab(bounding_box)  # pobranie wycinka z monitora do buffora
+		img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")  # tworzenie kopii wycinku z bufora
+		img = np.array(img)  # konwersja z wycinka obrazu z bufora  do tablicy numpy
 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)  # wyszukiwanie obrazu w obrazie
-	mn, _, mnLoc, maxLoc = cv2.minMaxLoc(result)  # wynik obrazu w obrazie (mn o ile odbiega od przykladu)
-	# print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
-	if mn < 0.1:
+	mn, x, mnLoc, maxLoc = cv2.minMaxLoc(result)  # wynik obrazu w obrazie (mn o ile odbiega od przykladu)
+	if mn < similarity:
 		# plt.imshow(img)
 		# plt.show()
-		# print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
-		return (maxLoc, img)
+		# print(f"Podobienstwo :", 1-mn, threading.current_thread().name)
+		return (img, 1 - mn)
 	return (0, 0)
 
-def numpyCloudFinder(searchWindow, sample, samplebase):
-	bounding_box = {'top': searchWindow[1], 'left': searchWindow[0], 'width': searchWindow[2] - searchWindow[0],
-	                'height': searchWindow[3] - searchWindow[1]}
-	sct_img = sct.grab(bounding_box)  # pobranie wycinka z monitora do buffora
-	img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")  # tworzenie kopii wycinku z bufora
-	# do podgladu wycinka przed zmiana
-	# plt.imshow(img)
-	# plt.show()
-	# color_filter_30 = np.array([0, 15, 255])  # Losowy kolor by w niego zmienic pixele nie majace znaczenia
-	# img = np.array(img)  # konwersja z wycinka obrazu z bufora  do tablicy numpy
-	# img[np.all(img != filter,
-	#            axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
-	# do podgladu wycinka po zmianie
-	# plt.imshow(img)
-	# plt.show()
-	# plt.imsave("plot\plot"+str(random.randint(1,100))+".png",img)
-	# plt.imshow(sample)
-	# plt.show()
-	# szukanie ktory komunikat
-	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)  # wyszukiwanie obrazu w obrazie
-	mn, _, mnLoc, maxLoc = cv2.minMaxLoc(result)  # wynik obrazu w obrazie (mn o ile odbiega od przykladu)
-	# print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
-	if mn < 0.1:
-		# plt.imshow(img)
-		# plt.show()
-		# print(f"Podobienstwo :", maxLoc, mn, threading.current_thread().name)
-		return (maxLoc, img)
-	return (0, 0)
+
+def numpyFindWindowInArray(array, size, similarity):
+	"""
+	This function search for "window" in image
+	it sums rows value in turn and compare them in pairs
+	if absolute value of subbtract of 2 rows is bigger than treshold
+	then it resize array into smaller one
+	:param array:
+	:param position:
+	:param size:
+	:param similarity:
+	:return:
+	"""
+	x = np.shape(array)
+	print(similarity)
+	TMParray = array[:, :, :]
+	if similarity > 0.6:
+		size = [35, 35]
+	elif similarity < 0.2:
+		size = [15, 15]
+
+	for i in range(0,x[0]-1):
+		x1=TMParray[i,:,:].sum(dtype=int)
+		x2=TMParray[i+1,:,:].sum(dtype=int)
+		x3=x1-x2
+		if abs(x3) >= 3000:
+			# print(i,':',x1,x2,'abs',abs(x3),'x3',x3)
+			TMParray = array[i:i+size[0], :, :]
+			break
+	for i in range(0,x[1]-1):
+		x1=TMParray[:,i,:].sum(dtype=int)
+		x2=TMParray[:,i+1,:].sum(dtype=int)
+		x3=x1-x2
+		if abs(x3) >= 4000:
+			# print(i,':',x1,x2,'abs',abs(x3),'x3',x3)
+			TMParray = TMParray[:,i:i+size[1], :]
+			break
+	# plt.imsave("img\debugger\sample\\" + str(similarity) + ".png", TMParray)
+	# print(np.shape(TMParray))
+	return TMParray

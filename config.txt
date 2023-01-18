@@ -9,6 +9,6 @@ Klient_3 0
 Klient_4 0
 Fish_Delay 60
 Space_Delay 45
-until_Restart 1500
+until_Restart 3000
 * 1=640:360 / 0=800:600 rozdzielczosc klienta
 ** Delay w ms[1/1000 s] mozna zmniejszac byleby klient metina zdazyl regowac na klikniecia** until_Restart liczy liczbe iteracji przed restartem (jezeli bot sie restartuje nim wyskoczy lowienie nalezy zwiekszyc)

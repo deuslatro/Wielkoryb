@@ -18,7 +18,6 @@ pyautogui.FAILSAFE = False
 # GLOBAL VARIABLES
 ########################################################################
 pustybit = (0, 15, 255)  # Wartosc bita "maski"
-# chatBit = (255, 230, 168)
 RESTART_COUNT = 0  # licznik ile razy boty łącznie zostaly zrestartowane podczas aktualneej sesji
 THREAD = 1  # Zmienna do konczenia wszystkich watkow (STOP botow)
 WHICHTHREAD = 0  # ustalanie ktory watek odpalony za pomoca nazwy
@@ -44,7 +43,7 @@ CHAT_COORDS = -400, -9  # pozycja wzgledem probki
 CHAT_SIZE = 48, 10  # szerokosc / wysokosc
 # okno chmurki(fragment w ktorym wyszukuje chmurki z liczba)
 CLOUD_COORDS = 370, 215  # pozycja wzgledem loga
-CLOUD_SIZE = 45, 45  # szerokosc / wysokosc
+CLOUD_SIZE = 45, 70  # szerokosc / wysokosc
 
 BIOLOG = 0
 OPEN = 0
@@ -72,7 +71,7 @@ lock = threading.Lock()
 eventLoop = asyncio.get_event_loop()
 
 color_filter_10 = np.array([198, 195, 198])  # Kolor pixeli wiadomosci prywatnej(ikony)
-color_filter_20 = np.array([255, 230, 186])  # Kolor tekstu INFORMACJI w cliencie
+color_filter_20 = np.array([255, 200, 200])  # Kolor tekstu INFORMACJI w cliencie
 
 
 def updateConfig():
@@ -100,6 +99,7 @@ np.save('img/numpy/3.npy', np.array(chat.get('3.png')))
 np.save('img/numpy/4.npy', np.array(chat.get('4.png')))
 np.save('img/numpy/5.npy', np.array(chat.get('5.png')))
 np.save('img/numpy/msg.npy', np.array(chat.get('msg.png')))
+np.save('img/numpy/cloud.npy', np.array(chat.get('cloud.png')))
 updateConfig()
 
 
@@ -118,28 +118,47 @@ def lineSpacing(chatWindow):
 	return chatWindow
 
 
-# Wyszukuje w oknie o podanych koordach oraz wielkosci wszystkie pixele jednakowego koloru na takiej samej pozycji
+def take_sample():
+	(_, gameWindow, chatWindow, msgBox, eqWindow, cloudWindow) = checkBox(1)
+	chatWindow = lineSpacing(chatWindow)
+	findFunctions.takeSample(chatWindow, 'chat1', 0)
+	findFunctions.takeSample(chatWindow, 'chat2', 1)
 
 
-# def numpyWhichNumber(sample, img):
-# 	result = cv2.matchTemplate(img, sample, cv2.TM_SQDIFF_NORMED)
-# 	mn, _, mnLoc, _ = cv2.minMaxLoc(result)
-# 	#print("Podobienstwo :", mn, threading.current_thread().name)
-# 	if mn == 0:
-# 		return 1
-# 	else:
-# 		return 0
-
-def readCHAT(chatWindow):
+def readCHAT(chatWindow, cloudWindow):
 	for line in range(0, NUMBER_OF_SCANNED_LINE):
 		chatWindow = lineSpacing(chatWindow)
-		(szukaj, img) = findFunctions.numpyFinder(chatWindow, numpyData.get('lowienie.npy'), color_filter_20)
+		szukaj = findFunctions.numpySameFinder(chatWindow, numpyData.get('lowienie.npy'), color_filter_20)
 		if (szukaj != 0):
-			print("SUCCES")
-			img2 = img[2:10, 40:46, :]
-			for findnumber in range(2, 6):
-				if findFunctions.numpyWhichNumber(sample=numpyData.get(f'{findnumber}.npy'), img=img2) != 0:
-					return findnumber
+			# img2 = img[2:10, 40:46, :]
+			# for findnumber in range(2, 6):
+			# 	if findFunctions.numpyWhichNumber(sample=numpyData.get(f'{findnumber}.npy'), img=img2) != 0:
+			# 		return findnumber
+			arrayList = list()
+			similarityList = list()
+			for i in range(0, 100):
+				imgArray, imgSimilarity = findFunctions.numpySimilarFinder(cloudWindow,
+				                                                           numpyData.get('cloud.npy'), 0.8)
+				if isinstance(imgArray, (np.ndarray)):
+					arrayList.append(imgArray)
+					similarityList.append(imgSimilarity)
+					if len(similarityList) > 5:
+						break
+
+			min_index = similarityList.index(min(similarityList))
+			imgArray = arrayList[min_index]
+			resizedArray = findFunctions.numpyFindWindowInArray(imgArray, [25, 25], imgSimilarity)
+			similarityList = list()
+			for i in range(1, 6):
+				imgArray, imgSimilarity = findFunctions.numpySimilarFinder(resizedArray,
+				                                                           numpyData.get(str(i) + '.npy'), 1)
+				if imgSimilarity > 0.999:
+					break
+				similarityList.append(imgSimilarity)
+			# print(i,similarityList)
+			if len(similarityList) >= 5:
+				print("TO JEST PRAWDOPODOBNIE:", similarityList.index(max(similarityList)) + 1)
+
 	return 0
 
 
@@ -177,7 +196,7 @@ def startNewBots(numberOfBots: int):
 
 def initialization(ActualThreadNumber):
 	try:
-		(logoPosition, gameWindow, chatWindow1, msgBox, eqWindow,cloudWindow) = checkBox(ActualThreadNumber)
+		(logoPosition, gameWindow, chatWindow1, msgBox, eqWindow, cloudWindow) = checkBox(ActualThreadNumber)
 	except TypeError:
 		print(f"Brak Loga badz eq/chatu {BotPosition(ActualThreadNumber).name}")
 		return 0
@@ -205,16 +224,16 @@ def initialization(ActualThreadNumber):
 	# 	initialization(ActualThreadNumber)
 
 	data.STATUS[ActualThreadNumber - 1] = "START"
-	fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition, baitPosition)
+	fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition, baitPosition, cloudWindow)
 
 
-def fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition, baitPosition):
+def fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition, baitPosition, cloudWindow):
 	global RESTART_COUNT
 	while THREAD == 1:
 		data.STATUS[ActualThreadNumber - 1] = "ŁOWIE"
 		time.sleep(5)
-		print(baitPosition)
 		mouse.q.put(('move', baitPosition[0], baitPosition[1], fish_Delay))
+		mouse.q.put(('space', cloudWindow[0] - 50, cloudWindow[1], fish_Delay, 1))
 		# for key in ryby:
 		# 	fishPosition = findFunctions.searchInWindow(eqWindow, ryby[key])
 		# 	if fishPosition != 0:
@@ -223,8 +242,8 @@ def fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition
 
 		with lock:
 			if DISCORD_BOT == 1:
-				(msgIconPosition, _) = findFunctions.numpyFinder(msgBox, numpyData.get('msg.npy'), color_filter_10)
-				if msgIconPosition != 0:
+				isMsgIconVisable = findFunctions.numpySameFinder(msgBox, numpyData.get('msg.npy'), color_filter_10)
+				if isMsgIconVisable != 0:
 					print("WIADOMOSC MSG")
 					msgIconPosition = msgIconPosition[0] + msgBox[0], msgIconPosition[1] + msgBox[1]
 					conversation(msgIconPosition, ActualThreadNumber, wholeWindow)
@@ -239,7 +258,7 @@ def fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition
 		fish_Loop = 0
 		restart_Counter = 0
 		while fish_Loop == 0:
-			fish_Loop = searchInChat(restart_Counter, chatWindow1)
+			fish_Loop = searchInChat(restart_Counter, chatWindow1, cloudWindow)
 			restart_Counter += 1
 			if THREAD != 1:
 				data.STATUS[ActualThreadNumber - 1] = "STOPOWANKO"
@@ -332,12 +351,12 @@ def conversation(msgIconPosition, ActualThreadNumber, wholeWindow):
 
 # print("wiadomosc w watku ",ActualThreadNumber)
 
-def searchInChat(restart_Counter, chatWindow):
+def searchInChat(restart_Counter, chatWindow, cloudWindow):
 	# ilosc  prob przed restartem
 	if (restart_Counter > until_Restart):
 		return 7
 	else:
-		wynik = readCHAT(chatWindow)
+		wynik = readCHAT(chatWindow, cloudWindow)
 	return wynik
 
 
@@ -357,7 +376,7 @@ def checkBox(ActualThreadNumber):
 	if logoPosition == 0:
 		print(f"BRAK LOGA W WATKU {BotPosition(ActualThreadNumber).name}")
 		data.STATUS[ActualThreadNumber - 1] = "ERR(LOGO)"
-		return 0,0,0,0,0,0
+		return 0, 0, 0, 0, 0, 0
 	gameWindow = logoPosition[0] + GameSize[0], logoPosition[1] + GameSize[1]
 	eqPosition = findFunctions.searchInWindow(logoPosition + gameWindow, sample["eq.png"])
 	if eqPosition == 0:
@@ -378,6 +397,7 @@ def checkBox(ActualThreadNumber):
 		# pozycja wzgledem probki protokołu chatu[ikony wyślij wiadomość]
 		chatWindow = chat[0] + CHAT_COORDS[0], chat[1] + CHAT_COORDS[1], chat[0] + CHAT_COORDS[0] + CHAT_SIZE[0], chat[
 			1] + CHAT_COORDS[1] + CHAT_SIZE[1]
+
 	if RESOLUTION == 1:
 		msgBox = logoPosition[0] + MSG_COORDS[0], logoPosition[1] + MSG_COORDS[1], logoPosition[0] + MSG_COORDS[0] + \
 		         MSG_SIZE[0], logoPosition[1] + MSG_COORDS[1] + MSG_SIZE[1]
@@ -385,14 +405,14 @@ def checkBox(ActualThreadNumber):
 		msgBox = logoPosition[0] + MSG_COORDS[0], logoPosition[1] + MSG_COORDS[1], logoPosition[0] + MSG_COORDS[0] + \
 		         MSG_SIZE[0], logoPosition[1] + MSG_COORDS[1] + MSG_SIZE[1]
 
-
 	if RESOLUTION == 1:
-		cloudWindow = logoPosition[0] + CLOUD_COORDS[0], logoPosition[1] + CLOUD_COORDS[1], logoPosition[0] + CLOUD_COORDS[0] + \
-		         CLOUD_SIZE[0], logoPosition[1] + CLOUD_COORDS[1] + CLOUD_SIZE[1]
+		cloudWindow = logoPosition[0] + CLOUD_COORDS[0], logoPosition[1] + CLOUD_COORDS[1], logoPosition[0] + \
+		              CLOUD_COORDS[0] + \
+		              CLOUD_SIZE[0], logoPosition[1] + CLOUD_COORDS[1] + CLOUD_SIZE[1]
 	else:
-		cloudWindow = logoPosition[0] + CLOUD_COORDS[0], logoPosition[1] + CLOUD_COORDS[1], logoPosition[0] + CLOUD_COORDS[0] + \
-		         CLOUD_SIZE[0], logoPosition[1] + CLOUD_COORDS[1] + CLOUD_SIZE[1]
-
+		cloudWindow = logoPosition[0] + CLOUD_COORDS[0], logoPosition[1] + CLOUD_COORDS[1], logoPosition[0] + \
+		              CLOUD_COORDS[0] + \
+		              CLOUD_SIZE[0], logoPosition[1] + CLOUD_COORDS[1] + CLOUD_SIZE[1]
 
 	if PRINTSCREEN == 1:
 		img = ImageGrab.grab(bbox=None)
@@ -418,10 +438,10 @@ def checkBox(ActualThreadNumber):
 		draw.rectangle(msgBox, outline=(16, 255, 255), width=2)
 		draw.rectangle(cloudWindow, outline=(16, 255, 255), width=2)
 		draw.rectangle(printFishDebug, outline=(128, 255, 96), width=1)
-		if chatWindow != 0:
-			for line in range(0, NUMBER_OF_SCANNED_LINE):
-				chatWindow = lineSpacing(chatWindow)
-				draw.rectangle(chatWindow, outline=(255, 16, 16), width=2)
+		# if chatWindow != 0:
+		# 	for line in range(0, NUMBER_OF_SCANNED_LINE):
+		# 		chatWindow = lineSpacing(chatWindow)
+		# 		draw.rectangle(chatWindow, outline=(255, 16, 16), width=2)
 		img.save("boxy.png")
 		time.sleep(0.5)
 		if chat != 0:
@@ -487,7 +507,7 @@ async def picToDiscord(botPosition):
 
 def probka(a):
 	try:
-		(logoPosition,_,_,_,eqWindow,_) = checkBox(1)
+		(logoPosition, _, _, _, eqWindow, _) = checkBox(1)
 		# Obszar pobierania próbki(dla lowianie (F4))
 		if a == sample["low.png"]:
 			if RESOLUTION == 1:

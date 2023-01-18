@@ -106,8 +106,9 @@ class ChatBox(QWidget):
 	def location_on_the_screen(self,chatWindow):
 		self.hide()
 		if chatWindow != 0:
+			chatWindow = wedkarz.lineSpacing(chatWindow)
 			x = chatWindow[0]
-			y = chatWindow[1]-15
+			y = chatWindow[1]
 			self.move(x, y)
 		self.show()
 
@@ -190,7 +191,9 @@ class MainWindow:
 		self.timer = QtCore.QTimer()
 		self.timer.timeout.connect(self.botsStatus)
 		self.timer.start(1000)
-		self.ui.buttonDebug3.clicked.connect(self.debug_overlay)
+		self.ui.buttonOpcje2.clicked.connect(self.debug_overlay)
+		self.ui.buttonDebug3.clicked.connect(self.take_sample)
+
 		#czy utworzono juz okna
 		self.existEQW=0
 		self.existGameW=0
@@ -198,7 +201,8 @@ class MainWindow:
 
 
 
-
+	def take_sample(self):
+		wedkarz.take_sample()
 
 	def debug_overlay(self):
 		if (self.existGameW == 1):
