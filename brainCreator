@@ -1,0 +1,69 @@
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+# from sklearn.metrics import confusion_matrix
+import itertools
+import os
+import shutil
+import random
+import glob
+import matplotlib.pyplot as plt
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+import scipy
+# %matplotlib inline
+
+
+# physical_devices = tf.config.experimental.list_physical_devices('GPU')
+# print("Num GPUs Available: ", len(physical_devices))
+# tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+train_path = 'datasets/Images/big'
+valid_path = 'datasets/Images/medium'
+# test_path = 'data/dogs-vs-cats/test'
+
+train_batches = keras.preprocessing.image.ImageDataGenerator(preprocessing_function=tf.keras.applications.vgg16.preprocess_input) \
+    .flow_from_directory(directory=train_path, target_size=(20,30), classes=['1','2','3','4','5'], batch_size=15)
+valid_batches = keras.preprocessing.image.ImageDataGenerator(preprocessing_function=tf.keras.applications.vgg16.preprocess_input) \
+    .flow_from_directory(directory=valid_path, target_size=(20,30), classes=['1','2','3','4','5'], batch_size=15)
+
+imgs, labels = next(train_batches)
+plt.imshow(imgs[0])
+plt.show()
+def plotImages(images_arr):
+    fig, axes = plt.subplots(1, 5, figsize=(20,30))
+    axes = axes.flatten()
+    for img, ax in zip( images_arr, axes):
+        ax.imshow(img)
+        # ax.axis('off')
+    plt.tight_layout()
+    plt.show()
+#
+plotImages(imgs)
+print(labels)
+
+
+model = keras.models.Sequential([
+    keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding = 'same', input_shape=(20,30,3)),
+    keras.layers.MaxPool2D(pool_size=(2, 2), strides=2),
+    keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding = 'same'),
+    keras.layers.MaxPool2D(pool_size=(2, 2), strides=2),
+    keras.layers.Flatten(),
+    keras.layers.Dense(units=5, activation='softmax')
+])
+
+
+model.summary()
+
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+print(len(train_batches))
+
+model.fit(x=train_batches,
+    steps_per_epoch=len(train_batches),
+    validation_data=valid_batches,
+    validation_steps=len(valid_batches),
+    epochs=10,
+    verbose=2
+)
+
+model.save('models/beta.h5')
