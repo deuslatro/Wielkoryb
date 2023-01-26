@@ -163,7 +163,9 @@ def numpySimilarFinder(searchWindow, sample, similarity):
 		# plt.imshow(img)
 		# plt.show()
 		# print(f"Podobienstwo :", 1-mn, threading.current_thread().name)
+		plt.imsave('datasets\Images\Samples\\'+ str(mn) + '.png', img)
 		return (img, 1 - mn)
+
 	return (0, 0)
 
 
@@ -180,29 +182,46 @@ def numpyFindWindowInArray(array, size, similarity):
 	:return:
 	"""
 	x = np.shape(array)
-	print(similarity)
+	# print(similarity)
+	# print(x)
 	TMParray = array[:, :, :]
-	if similarity > 0.6:
-		size = [35, 35]
-	elif similarity < 0.2:
-		size = [15, 15]
+	xline=[]
+	yline=[]
+
+	for i in range(0,x[1]-1):
+		x1=TMParray[:,i,:].sum(dtype=int)
+		x2=TMParray[:,i+1,:].sum(dtype=int)
+		x3=x1-x2
+		if abs(x3) >= 5000:
+			xline.append(i)
+			# print(i,':',x1,x2,'abs',abs(x3),'x3',x3)
+
+	if len(xline)<2:
+		return TMParray
+	width = xline[-1]-xline[0] + 2
+	# print(xline)
+	# print('last',xline[-1])
+	# print('szer',width)
+	height = np.round(width*0.7)
+	# print('wys',height)
+	TMParray = array[:, xline[0]:xline[0]+width, :]
+	# print(np.shape(TMParray))
 
 	for i in range(0,x[0]-1):
 		x1=TMParray[i,:,:].sum(dtype=int)
 		x2=TMParray[i+1,:,:].sum(dtype=int)
 		x3=x1-x2
-		if abs(x3) >= 3000:
+		if abs(x3) >= 3500:
+			# print(x3)
+			yline.append(i)
 			# print(i,':',x1,x2,'abs',abs(x3),'x3',x3)
-			TMParray = array[i:i+size[0], :, :]
 			break
-	for i in range(0,x[1]-1):
-		x1=TMParray[:,i,:].sum(dtype=int)
-		x2=TMParray[:,i+1,:].sum(dtype=int)
-		x3=x1-x2
-		if abs(x3) >= 4000:
-			# print(i,':',x1,x2,'abs',abs(x3),'x3',x3)
-			TMParray = TMParray[:,i:i+size[1], :]
-			break
+
+	# print(yline)
+	# print(height)
+	TMParray = TMParray[yline[0]:yline[0]+int(height),:, :]
 	# plt.imsave("img\debugger\sample\\" + str(similarity) + ".png", TMParray)
 	# print(np.shape(TMParray))
+	# plt.imshow(TMParray)
+	# plt.show()
 	return TMParray

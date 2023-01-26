@@ -7,29 +7,29 @@ from random import randint
 
 q = queue.Queue()
 
-queueTimer=0.01
+queueTimer = 0.01
 
 
 def queueOperator():
-	while(data.MOUSE==1):
+	while (data.MOUSE == 1):
 		time.sleep(queueTimer)
-		if q.empty()!=True:
+		if q.empty() != True:
 			cmd = q.get()
 			if cmd != None:
 				if cmd[0] == 'move':
-					pyautogui.moveTo(cmd[1],cmd[2])
+					pyautogui.moveTo(cmd[1], cmd[2])
 					time.sleep(cmd[3])
 					pyautogui.click(button='right')
 					time.sleep(cmd[3])
 				elif cmd[0] == 'click':
-					time.sleep(2*cmd[4])
+					time.sleep(2 * cmd[4])
 					pyautogui.moveTo(cmd[1], cmd[2])
-					time.sleep(2*cmd[4])
-					for i in range(0,cmd[3]):
-						time.sleep(cmd[4]+(randint(5,25)/1000))
-						pyautogui.click(cmd[1], cmd[2],button='right')
+					time.sleep(2 * cmd[4])
+					for i in range(0, cmd[3]):
+						time.sleep(cmd[4] + (randint(5, 25) / 1000))
+						pyautogui.click(cmd[1], cmd[2], button='right')
 				elif cmd[0] == 'LMB':
-					#print("LMB !!!")
+					# print("LMB !!!")
 					pyautogui.moveTo(cmd[1], cmd[2])
 					time.sleep(cmd[4])
 					pyautogui.click(button='left')
@@ -39,12 +39,8 @@ def queueOperator():
 					pyautogui.write(cmd[1], interval=0.04)
 				elif cmd[0] == 'space':
 					time.sleep(cmd[3])
-					pyautogui.click(cmd[1], cmd[2],button='right')
-					time.sleep(cmd[3]+1)
+					pyautogui.click(cmd[1], cmd[2], button='right')
+					time.sleep(cmd[3] * 2)
 					for i in range(0, cmd[4]):
-						print("space")
+						time.sleep(cmd[3] * randint(1, 3))
 						pydirectinput.press('space')
-
-
-
-
