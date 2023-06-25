@@ -35,15 +35,22 @@ class GameBox(QWidget):
 		if logoPosition != 0:
 			x = logoPosition[0]
 			y = logoPosition[1]
-			self.move(x, y)
+			self.move(x-1, y-1)
 		self.show()
 
 	def paintEvent(self, event):
 		GameWidth = wedkarz.GameSize[0]
 		GameHeight = wedkarz.GameSize[1]
 		self.qp.begin(self)
-		self.qp.setPen(QPen(Qt.red, 4, Qt.SolidLine))
-		self.qp.drawRect(0, 0, GameWidth, GameHeight)
+		self.qp.setPen(QPen(Qt.red, 1, Qt.SolidLine))
+		# Narysuj górną linię prostokąta bez rogów
+		self.qp.drawLine(10, 0, GameWidth - 10, 0)
+		# Narysuj prawą linię prostokąta bez rogów
+		self.qp.drawLine(GameWidth, 10, GameWidth, GameHeight - 10)
+		# Narysuj dolną linię prostokąta bez rogów
+		self.qp.drawLine(GameWidth - 10, GameHeight, 10, GameHeight)
+		# Narysuj lewą linię prostokąta bez rogów
+		self.qp.drawLine(0, GameHeight - 10, 0, 10)
 		self.qp.end()
 
 
@@ -72,15 +79,15 @@ class EQBox(QWidget):
 		if eqWindow != 0:
 			x = eqWindow[0]
 			y = eqWindow[1]
-			self.move(x, y)
+			self.move(x-1, y-1)
 		self.show()
 
 	def paintEvent(self, event):
 		self.qp.begin(self)
 		if self.eqWindow != 0:
 			self.qp.setPen(QPen(Qt.blue, 1, Qt.SolidLine))
-			self.qp.drawRect(wedkarz.SAMPLE_COORDS[0], wedkarz.SAMPLE_COORDS[1],wedkarz.SAMPLE_SIZE[0],wedkarz.SAMPLE_SIZE[1])
-			self.qp.drawRect(0, 0, wedkarz.EQ_SIZE[0],wedkarz.EQ_SIZE[1])
+			# self.qp.drawRect(wedkarz.SAMPLE_COORDS[0]-1, wedkarz.SAMPLE_COORDS[1]-1,wedkarz.SAMPLE_SIZE[0]+1,wedkarz.SAMPLE_SIZE[1]+1)
+			self.qp.drawRect(0, 0, wedkarz.EQ_SIZE[0]+1,wedkarz.EQ_SIZE[1]+1)
 		self.qp.end()
 
 
@@ -109,7 +116,7 @@ class ChatBox(QWidget):
 			chatWindow = wedkarz.lineSpacing(chatWindow)
 			x = chatWindow[0]
 			y = chatWindow[1]
-			self.move(x, y)
+			self.move(x-1, y-1)
 		self.show()
 
 	def paintEvent(self, event):
@@ -119,7 +126,7 @@ class ChatBox(QWidget):
 			self.qp.setPen(QPen(Qt.red, 1, Qt.SolidLine))
 			# self.qp.drawRect(wedkarz.CHAT_COORDS[0], wedkarz.CHAT_COORDS[1],wedkarz.CHAT_SIZE[0],wedkarz.CHAT_SIZE[1])
 			for line in range(0, wedkarz.NUMBER_OF_SCANNED_LINE):
-				self.qp.drawRect(0, chatLine, wedkarz.CHAT_SIZE[0],wedkarz.CHAT_SIZE[1])
+				self.qp.drawRect(0, chatLine, wedkarz.CHAT_SIZE[0]+1,wedkarz.CHAT_SIZE[1]+1)
 				chatLine += 15
 		self.qp.end()
 
@@ -147,17 +154,49 @@ class CloudBox(QWidget):
 		if cloudWindow != 0:
 			x = cloudWindow[0]
 			y = cloudWindow[1]
-			self.move(x, y)
+			self.move(x-1, y-1)
 		self.show()
 
 	def paintEvent(self, event):
 		self.qp.begin(self)
 		if self.cloudWindow!= 0:
-			self.qp.setPen(QPen(Qt.cyan, 3, Qt.SolidLine))
-			self.qp.drawRect(0, 0, wedkarz.CLOUD_SIZE[0],wedkarz.CLOUD_SIZE[1])
+			self.qp.setPen(QPen(Qt.cyan, 1, Qt.SolidLine))
+			self.qp.drawRect(0, 0, wedkarz.CLOUD_SIZE[0]+1,wedkarz.CLOUD_SIZE[1]+1)
 		self.qp.end()
 
+class MsgBox(QWidget):
+	def __init__(self,msgWindow):
+		super().__init__()
+		layout = QVBoxLayout()
+		myFont = QFont()
+		myFont.setBold(True)
+		self.label1 = QLabel("MSG")
+		self.label1.setFont(myFont)
+		color_effect = QGraphicsColorizeEffect()
+		color_effect.setColor(Qt.cyan)
+		self.label1.setGraphicsEffect(color_effect)
+		self.label1.style()
+		layout.addWidget(self.label1)
+		self.setLayout(layout)
+		self.qp = QPainter()
+		self.msgWindow = msgWindow
+		# self.paintEvent()
+		# self.location_on_the_screen()
 
+	def location_on_the_screen(self,msgWindow):
+		self.hide()
+		if msgWindow != 0:
+			x = msgWindow[0]
+			y = msgWindow[1]
+			self.move(x-1, y-1)
+		self.show()
+
+	def paintEvent(self, event):
+		self.qp.begin(self)
+		if self.msgWindow!= 0:
+			self.qp.setPen(QPen(Qt.cyan, 1, Qt.SolidLine))
+			self.qp.drawRect(0, 0, wedkarz.MSG_SIZE[0]+1,wedkarz.MSG_SIZE[1]+1)
+		self.qp.end()
 
 class MainWindow:
 	def __init__(self):
@@ -198,6 +237,7 @@ class MainWindow:
 		self.existEQW=0
 		self.existGameW=0
 		self.existChatW=0
+		self.existmsgBox=0
 
 
 
@@ -214,6 +254,8 @@ class MainWindow:
 				self.chatbox.hide()
 			if (self.existChatW == 1):
 				self.chatbox.hide()
+			if (self.existmsgBox == 1):
+				self.chatbox.hide()
 		(logoPosition, gameWindow, chatWindow, msgBox, eqWindow, cloudWindow) = wedkarz.checkBox(1)
 		if logoPosition == 0:
 			print("Logo ERR")
@@ -223,6 +265,12 @@ class MainWindow:
 			self.gamebox.setFixedSize(860, 660)
 			self.gamebox.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
 			self.gamebox.setAttribute(QtCore.Qt.WA_TranslucentBackground, on=True)
+
+			self.msgBox = MsgBox(msgBox)
+			self.existmsgBox = 1
+			self.msgBox.setFixedSize(200, 100)
+			self.msgBox.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+			self.msgBox.setAttribute(QtCore.Qt.WA_TranslucentBackground, on=True)
 
 			self.eqbox = EQBox(eqWindow)
 			self.existEQW=1
@@ -247,6 +295,7 @@ class MainWindow:
 			self.chatbox.location_on_the_screen(chatWindow)
 			self.cloudbox.location_on_the_screen(cloudWindow)
 			self.gamebox.location_on_the_screen(logoPosition)
+			self.msgBox.location_on_the_screen(msgBox)
 
 
 

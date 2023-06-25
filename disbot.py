@@ -60,8 +60,8 @@ async def r(ctx, arg):
 			print("pobieram nudesy od bota :",arg)
 			await wedkarz.picToDiscord(arg)
 	except ValueError:
-		print('poprawna konstrukcja komendy : .r [ktory bot] np: .w 1')
-		await client.signal('poprawna konstrukcja komendy : .r [ktory bot] np: .w 1')
+		print('poprawna konstrukcja komendy : .r [ktory bot] np: .r 1')
+		await client.signal('poprawna konstrukcja komendy : .r [ktory bot] np: .r 1')
 
 
 @client.command()

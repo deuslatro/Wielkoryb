@@ -137,6 +137,7 @@ def takeSample(searchWindow, filename, filter):
 		color_filter_30 = np.array([0, 15, 255])  # Losowy kolor by w niego zmienic pixele nie majace znaczenia
 		img[np.all(img != wedkarz.color_filter_20,
 		           axis=-1)] = color_filter_30  # Dla wszystkich pixeli jezeli ktorykolwiek jest inny niz wazny zamien na taki sam kolor
+
 	plt.imsave("img\debugger\sample\\" + filename + ".png", img)
 	return 0
 
@@ -163,7 +164,7 @@ def numpySimilarFinder(searchWindow, sample, similarity):
 		# plt.imshow(img)
 		# plt.show()
 		# print(f"Podobienstwo :", 1-mn, threading.current_thread().name)
-		plt.imsave('datasets\Images\Samples\\'+ str(mn) + '.png', img)
+		# plt.imsave('datasets\Images\Samples\\'+ str(mn) + '.png', img)
 		return (img, 1 - mn)
 
 	return (0, 0)

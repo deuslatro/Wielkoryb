@@ -31,16 +31,25 @@ def queueOperator():
 				elif cmd[0] == 'LMB':
 					# print("LMB !!!")
 					pyautogui.moveTo(cmd[1], cmd[2])
-					time.sleep(cmd[4])
+					time.sleep(cmd[3])
 					pyautogui.click(button='left')
-					time.sleep(cmd[4])
+					time.sleep(cmd[3])
 				elif cmd[0] == 'write':
 					time.sleep(cmd[2])
 					pyautogui.write(cmd[1], interval=0.04)
 				elif cmd[0] == 'space':
-					time.sleep(cmd[3])
+					time.sleep(cmd[3]/2)
 					pyautogui.click(cmd[1], cmd[2], button='right')
-					time.sleep(cmd[3] * 2)
+					time.sleep(cmd[3] * 1.5)
 					for i in range(0, cmd[4]):
-						time.sleep(cmd[3] * randint(1, 3))
+						time.sleep(cmd[3] * randint(1, 2)+(randint(3,13)/1000))
 						pydirectinput.press('space')
+				elif cmd[0] == 'mount':
+					pydirectinput.keyDown('ctrl')  # Przytrzymaj klawisz Control (Ctrl)
+					time.sleep(cmd[2])
+					pydirectinput.press('g')
+					time.sleep(cmd[2])
+					pydirectinput.press('g')
+					time.sleep(cmd[2])
+					pydirectinput.keyUp('ctrl')  # Zwolnij klawisz Control (Ctrl)
+					print("Test")

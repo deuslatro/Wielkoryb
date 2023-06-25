@@ -16,6 +16,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from skimage import transform
 from tensorflow import keras
+from collections import Counter
 
 pyautogui.PAUSE = 0
 pyautogui.FAILSAFE = False
@@ -33,15 +34,15 @@ screenGrab = d3dshot.create(capture_output="numpy")
 GameSize600 = 600, 380
 GameSize800 = 820, 620
 # eq (wielkosc oraz pozycja eq wzgledem wyszukanej ikonki/ znaku)
-EQ_COORDS = -25, 95
+EQ_COORDS = 17, 35
 EQ_SIZE = 165, 305  # szerokosc / wysokosc
 # probka (1 slot w eq)
 SAMPLE_COORDS = 19, 10
 SAMPLE_SIZE = 9, 9  # szerokosc / wysokosc
 # ikonka lowienia(slot f4 zalezny od rozdzielczosci klienta)
 # ikonka MSG(prawa strona zalezna od rozdzielczosci klienta)
-MSG_COORDS = 0, 20
-MSG_SIZE = 10, 100  # szerokosc / wysokosc
+MSG_COORDS = 730, 202
+MSG_SIZE = 5, 5  # szerokosc / wysokosc
 # okno chatu(fragment w ktorym wyszukuje wiadomosci)
 CHAT_COORDS = -400, -9  # pozycja wzgledem probki
 CHAT_SIZE = 48, 10  # szerokosc / wysokosc
@@ -49,19 +50,22 @@ CHAT_SIZE = 48, 10  # szerokosc / wysokosc
 CLOUD_COORDS = 363, 230  # pozycja wzgledem loga
 CLOUD_SIZE = 55, 55  # szerokosc / wysokosc
 
+USE_MARMOUR = 0
 BIOLOG = 0
 OPEN = 0
 PRINTSCREEN = 0
-DISCORD_BOT = 0
+DISCORD_BOT = 1
 RESOLUTION = 1  # 1=640:360 / 800:600 rozdzielczość klienta
 if RESOLUTION == 1:
     GameSize = 800, 600
 else:
     GameSize = 640, 360
 NUMBER_OF_SCANNED_LINE = 1
+NUMBER_OF_SUCCES_CHECK = 2
 AUTO_EXIT = 0
 AUTO_MSG = 1
 ALL_AUTO_EXIT = 0
+
 
 fish_Delay = int(data.DATA.get("Fish_Delay"))
 space_Delay = int(data.DATA.get("Space_Delay"))
@@ -74,12 +78,16 @@ print('iteracji do RESTARTU:', until_Restart)
 lock = threading.Lock()
 eventLoop = asyncio.get_event_loop()
 
-color_filter_10 = np.array([198, 195, 198])  # Kolor pixeli wiadomosci prywatnej(ikony)
+color_filter_10 = np.array([255, 251, 255])  # Kolor pixeli wiadomosci prywatnej(ikony)
 color_filter_20 = np.array([255, 200, 200])  # Kolor tekstu INFORMACJI w cliencie
+color_filter_30 = np.array([122,231,93]) #Kolor nazw obiektu typu ogniska
 
 
 # prediction model
-model = keras.models.load_model('models/beta.h5')
+# model = keras.models.load_model('models/alpha.h5')
+# model = keras.models.load_model('models/beta.h5')
+# model = keras.models.load_model('models/delta.h5')
+model = keras.models.load_model('models/zetta.h5')
 
 
 def updateConfig():
@@ -128,9 +136,9 @@ def lineSpacing(chatWindow):
 
 def take_sample():
     (_, gameWindow, chatWindow, msgBox, eqWindow, cloudWindow) = checkBox(1)
-    chatWindow = lineSpacing(chatWindow)
-    findFunctions.takeSample(chatWindow, 'chat1', 0)
-    findFunctions.takeSample(chatWindow, 'chat2', 1)
+    # chatWindow = lineSpacing(chatWindow)
+    findFunctions.takeSample(msgBox, 'msg', 1)
+    # findFunctions.takeSample(msgBox, 'chat2', 1)
 
 
 def readCHAT(chatWindow, cloudWindow):
@@ -138,51 +146,62 @@ def readCHAT(chatWindow, cloudWindow):
         chatWindow = lineSpacing(chatWindow)
         szukaj = findFunctions.numpySameFinder(chatWindow, numpyData.get('lowienie.npy'), color_filter_20)
         if (szukaj != 0):
+            time.sleep(0.15)
             # img2 = img[2:10, 40:46, :]
             # for findnumber in range(2, 6):
-            # 	if findFunctions.numpyWhichNumber(sample=numpyData.get(f'{findnumber}.npy'), img=img2) != 0:
+             # 	if findFunctions.numpyWhichNumber(sample=numpyData.get(f'{findnumber}.npy'), img=img2) != 0:
             # 		return findnumber
             arrayList = list()
             similarityList = list()
+            succesList = list()
+            succesCounter = 0
+            imgArray = 0
+            for j in range(0, 10):
+                for i in range(0, 100):
+                    imgArray, imgSimilarity = findFunctions.numpySimilarFinder(cloudWindow,
+                                                                               numpyData.get('cloud.npy'), 0.9)
+                    if isinstance(imgArray, np.ndarray):
+                        if imgSimilarity == 0:
+                            continue
+                        arrayList.append(imgArray)
+                        similarityList.append(imgSimilarity)
+                        if len(similarityList) > 5:
+                            break
+                if len(similarityList) < 5:
+                    break
+                # print(imgSimilarity)
+                # print("TEST")
+                # plt.imshow(imgArray)
+                # plt.show()
+                if isinstance(imgArray, int):
+                    return 0
 
-            for i in range(0, 100):
-                imgArray, imgSimilarity = findFunctions.numpySimilarFinder(cloudWindow,
-                                                                           numpyData.get('cloud.npy'), 0.8)
-                if isinstance(imgArray, np.ndarray):
-                    if imgSimilarity == 0:
-                        continue
-                    arrayList.append(imgArray)
-                    similarityList.append(imgSimilarity)
-                    if len(similarityList) > 5:
-                        break
-            if len(similarityList) < 5:
-                break
-            # print(imgSimilarity)
-            # print("TEST")
+                imgArray = findFunctions.numpyFindWindowInArray(imgArray, [25, 25], imgSimilarity)
+                imgArray = cv2.resize(imgArray, (30, 20), interpolation=cv2.INTER_AREA)
 
-            # plt.imshow(imgArray)
-            # plt.show()
-            imgArray = findFunctions.numpyFindWindowInArray(imgArray, [25, 25], imgSimilarity)
-            imgArray = cv2.resize(imgArray, (30, 20), interpolation=cv2.INTER_AREA)
+                # plt.imshow(imgArray)
+                # plt.show()
 
-            plt.imshow(imgArray)
-            plt.show()
-            if (np.max(similarityList)) < 0.96:
-                plt.imsave("datasets/Samples/" + str(np.max(imgSimilarity)) + ".png", imgArray)
+                imgArray = np.expand_dims(imgArray, axis=0)
+                test_batches = keras.preprocessing.image.ImageDataGenerator(preprocessing_function=tf.keras.applications.vgg16.preprocess_input) \
+                    .flow(imgArray)
+                result = model.predict(test_batches)
+                # print('przwiduje: ',np.argmax(result)+1)
+                # imgArray = np.squeeze(imgArray, axis=0)
+                # plt.imsave("datasets/Samples/" + str(np.argmax(result) + 1) + " " + str(np.max(imgSimilarity)) + ".png",
+                #            imgArray)
 
-            imgArray = np.expand_dims(imgArray, axis=0)
-            test_batches = keras.preprocessing.image.ImageDataGenerator(preprocessing_function=tf.keras.applications.vgg16.preprocess_input) \
-                .flow(imgArray)
-            result = model.predict(test_batches)
-            imgs = next(test_batches)
-            imgs = np.squeeze(imgs)
-            plt.imshow(imgs)
-            plt.show()
-            # print(np.argmax(result)+1)
+                # imgs = next(test_batches)
+                # imgs = np.squeeze(imgs)
+                # plt.imshow(imgs)
+                # plt.show()
 
-            if (np.argmax(result)) == 0:
-                return 0
-            return np.argmax(result)+1
+                if (np.argmax(result)) == 0:
+                    return 0
+                # succesList.append(np.argmax(result)+1)
+                # succesCounter = succesList.count(np.argmax(result)+1)
+                # if succesCounter >= NUMBER_OF_SUCCES_CHECK:
+                return np.argmax(result) + 1
     return 0
 
 
@@ -227,6 +246,7 @@ def initialization(ActualThreadNumber):
     wholeWindow = logoPosition + gameWindow
     print("ilosc restartow: ", RESTART_COUNT)
     baitPosition = findFunctions.searchInWindow(eqWindow, sample["robak.png"])
+    baitPosition = 0,0
     if (baitPosition == 0):
         print(f"Brak robaka watek {BotPosition(ActualThreadNumber).name}")
         data.STATUS[ActualThreadNumber - 1] = "ERR(ROBAK)"
@@ -248,36 +268,49 @@ def initialization(ActualThreadNumber):
     # 	initialization(ActualThreadNumber)
 
     data.STATUS[ActualThreadNumber - 1] = "START"
-    fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition, baitPosition, cloudWindow)
+    fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition, baitPosition, cloudWindow,eqWindow)
 
 
-def fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition, baitPosition, cloudWindow):
+def fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition, baitPosition, cloudWindow,eqWindow):
     global RESTART_COUNT
     while THREAD == 1:
         data.STATUS[ActualThreadNumber - 1] = "ŁOWIE"
         time.sleep(5)
-        mouse.q.put(('move', baitPosition[0], baitPosition[1], fish_Delay))
-        mouse.q.put(('space', cloudWindow[0] - 50, cloudWindow[1], fish_Delay, 1))
-        # for key in ryby:
-        # 	fishPosition = findFunctions.searchInWindow(eqWindow, ryby[key])
-        # 	if fishPosition != 0:
-        # 		mouse.q.put(('move', fishPosition[0], fishPosition[1], fish_Delay))
-        # 		break
+        # mouse.q.put(('move', baitPosition[0], baitPosition[1], fish_Delay))
+        mouse.q.put(('space', cloudWindow[0] - 50-(randint(5, 25)), cloudWindow[1]-(randint(5, 25)), fish_Delay, 1))
 
         with lock:
             if DISCORD_BOT == 1:
                 isMsgIconVisable = findFunctions.numpySameFinder(msgBox, numpyData.get('msg.npy'), color_filter_10)
                 if isMsgIconVisable != 0:
                     print("WIADOMOSC MSG")
-                    msgIconPosition = msgIconPosition[0] + msgBox[0], msgIconPosition[1] + msgBox[1]
-                    conversation(msgIconPosition, ActualThreadNumber, wholeWindow)
+                    # msgIconPosition = msgIconPosition[0] + msgBox[0], msgIconPosition[1] + msgBox[1]
+                    conversation(msgBox, ActualThreadNumber, wholeWindow)
+
+        # for key in ryby:
+        #     fishPosition = findFunctions.searchInWindow(eqWindow, ryby[key])
+        #     if fishPosition != 0:
+        #         mouse.q.put(('LMB', fishPosition[0], fishPosition[1], fish_Delay))
+                # campfirePosition = findFunctions.searchInWindow(wholeWindow, sample["campfire.png"])
+                # mouse.q.put(('LMB', campfirePosition[0], campfirePosition[1], fish_Delay))
+                # break
+
+        if USE_MARMOUR != 0:
+            marmourIcon = findFunctions.searchInWindow(wholeWindow, sample["marmour_icon.png"])
+            if marmourIcon == 0:
+                marmourEq = findFunctions.searchInWindow(eqWindow, sample["marmour_eq.png"])
+                if marmourEq != 0:
+                    mouse.q.put(('click', marmourEq[0], marmourEq[1], 1, fish_Delay))
+                else:
+                    print("dokup marmurki")
+
 
         # mouse.q.put(('move', fishingPosition[0], fishingPosition[1], fish_Delay))
         # if biologPosition != 0:
         # 	time.sleep(0.2)
         # 	mouse.q.put(('LMB', biologPosition[0], biologPosition[1],1, fish_Delay))
 
-        time.sleep(5)
+        time.sleep(3)
         data.STATUS[ActualThreadNumber - 1] = "SZUKAM"
         fish_Loop = 0
         restart_Counter = 0
@@ -296,11 +329,12 @@ def fishing(ActualThreadNumber, chatWindow1, msgBox, wholeWindow, biologPosition
             if fish_Loop > 0:
                 with lock:
                     data.STATUS[ActualThreadNumber - 1] = f"FOUND {fish_Loop}"
-                mouse.q.put(('space', cloudWindow[0] - 50, cloudWindow[1], fish_Delay, fish_Loop))
+                mouse.q.put(('space', cloudWindow[0] - 50-(randint(5, 25)), cloudWindow[1]-(randint(5, 25)), fish_Delay, fish_Loop))
+                # mouse.q.put(('mount',0.03, 0.03))
                 # mouse.q.put(('click', baitPosition[0], baitPosition[1], 1, space_Delay))
                 # zmiana na SPACJE
                 # mouse.q.put(('click', fishingPosition[0], fishingPosition[1], fish_Loop, space_Delay))
-                time.sleep(5.5)
+                time.sleep(4+(randint(5, 100)/100))
     return 0
 
 
@@ -319,7 +353,7 @@ def chatBot(ActualThreadNumber):
     time.sleep(4)
     if ActualThreadNumber == 1:
         # msgInGame(ActualThreadNumber, '   ')
-        msgInGame(ActualThreadNumber, 'cze')
+        msgInGame(ActualThreadNumber, 'witam')
         time.sleep(5)
     # msgInGame(ActualThreadNumber, '   ')
     # msgInGame(ActualThreadNumber, 'zw kibl')
@@ -336,7 +370,7 @@ def chatBot(ActualThreadNumber):
     # msgInGame(ActualThreadNumber, 'o luj ktora godz ja spadam')
     # msgInGame(ActualThreadNumber, '   ')
     if ActualThreadNumber == 4:
-        msgInGame(ActualThreadNumber, 'yo')
+        msgInGame(ActualThreadNumber, 'cze')
         # msgInGame(ActualThreadNumber, '   ')
         time.sleep(5)
 
@@ -355,13 +389,14 @@ def conversation(msgIconPosition, ActualThreadNumber, wholeWindow):
     msgWindowPosition = findFunctions.searchInWindow(window=wholeWindow, szukany=sample['msg2.png'])
     print(msgWindowPosition)
     msgWindowBox = msgWindowPosition[0] - 280, msgWindowPosition[1] - 130, msgWindowPosition[0], msgWindowPosition[1]
-    if AUTO_MSG:
-        chatBot(ActualThreadNumber)
-        time.sleep(0.5)
 
     screen = ImageGrab.grab(bbox=msgWindowBox)
     future = asyncio.run_coroutine_threadsafe(disbot.client.sendScreen(screen), eventLoop)
     future.result()
+
+    if AUTO_MSG:
+        chatBot(ActualThreadNumber)
+        time.sleep(0.5)
 
     if ALL_AUTO_EXIT:
         for botsID in range(1, 5):
@@ -504,7 +539,7 @@ def msgInGame(botPosition, tresc):
     else:
         mouse.q.put(('move', send[0] - 35, send[1], 1, space_Delay))
         mouse.q.put(('write', tresc, space_Delay))
-        mouse.q.put(('LMB', send[0], send[1], 1, space_Delay))
+        # mouse.q.put(('LMB', send[0], send[1], 1, space_Delay))
         mouse.q.put(('move', send[0] - 35, send[1], 1, space_Delay))
         print('otwarta waidomosc : ', send)
 
